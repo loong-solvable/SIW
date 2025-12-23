@@ -1,0 +1,129 @@
+---
+alwaysApply: true
+---
+
+# =========================
+# SIW Intent Brain - Cursor Rules
+# =========================
+
+## 0) Project Mission (Non-negotiable)
+- Build "SIW Intent Brain": a Local-first, BYOK, Decision Support engine that scores intent from text and returns a strict Lead Card JSON.
+- The system must NOT implement or suggest any automation for posting, session/cookie manipulation, bypassing platform rules, evasion, or "anti-detection" behaviors.
+- Always produce contract-valid output, even on failure (fail-closed).
+
+## 1) Golden Deliverables
+You MUST deliver:
+1) A pip-installable Python package: `siw_intent_brain`
+2) CLI: `siw-brain score` and `siw-brain validate`
+3) JSON Schema file: `schemas/lead_card.v1.json`
+4) Complete unit tests (offline, no network required) + demo script `scripts/demo_score.py`
+5) README with install/config/run/test instructions
+
+## 2) Architecture Lock (Do NOT change structure)
+- Keep the exact folder/module structure from the implementation spec.
+- Do NOT merge everything into one file.
+- Respect dependency directions:
+  - `brain.py` can import everything.
+  - core modules MUST NOT import CLI modules.
+  - tests MUST run without network by injecting FakeClient.
+
+## 3) Strict Contract (Hard Requirement)
+- Implement `schemas/lead_card.v1.json` and ensure all outputs conform.
+- Implement `validate_lead_card()` and call it in `IntentBrain.score()`.
+- On ANY error, return a fail-closed LeadCard (ok=false, tier=D, next_step=monitor, confidence=0).
+- Meta MUST always include:
+  - model, provider="openrouter", latency_ms, retries, parser_mode, schema_version="lead_card.v1"
+  - error_code + error_detail for ok=false
+- Scores & confidence MUST be clamped to [0,1] ALWAYS.
+
+## 4) Prompt Safety & Stability Rules
+- System prompt must enforce:
+  - STRICT JSON ONLY (no markdown/prose)
+  - no bypass/evasion/automation guidance
+  - scores range [0,1], rationale <= 2 sentences
+- User payload must include context + text + output schema.
+- Keep prompt deterministic: stable field ordering and fixed schema text.
+- Use temperature=0.2, max_tokens=600.
+- Support toggling response_format={"type":"json_object"} via config.
+
+## 5) Upstream Client Rules
+- Implement `OpenRouterClient.complete()` using requests.
+- Must support retries with backoff.
+- Never log API key or full input text.
+- Handle timeout, HTTP>=400, empty content with proper error codes.
+- Return ChatResponse with latency_ms, retries, status_code.
+
+## 6) Parsing & Normalization Rules
+- Implement tolerant JSON extraction:
+  - try json.loads()
+  - else extract substring between first '{' and last '}' and parse
+  - else ParseError
+- Normalizer must:
+  - clamp scores/confidence
+  - clean lists to list[str], drop empties, truncate to max_list_items
+  - truncate rationale to max_rationale_chars
+  - keep enums only if valid; otherwise mark invalid flags
+
+## 7) Heuristics (Fixed Behavior)
+- Implement tiering formula EXACTLY:
+  base = 0.25*U + 0.30*P + 0.30*C + 0.15*S
+  score = base*(0.5 + 0.5*conf)
+  thresholds: S>=0.78 A>=0.62 B>=0.46 C>=0.30 else D
+- Implement next_step fallback EXACTLY:
+  if conf<0.35 => monitor
+  composite=(C+S+P)/3
+  composite<0.18 => ignore
+  C>=0.6 and S>=0.55 => offer_resource
+  P>=0.6 and S>=0.5 => ask_question
+  composite>=0.45 => draft_reply
+  else monitor
+- Implement soft fail-closed:
+  if confidence < min_confidence => tier=D and next_step in {ignore,monitor} (otherwise monitor) + safety note
+
+## 8) Testing Rules (Mandatory)
+- Write tests before claiming done.
+- Tests must run offline and pass:
+  - extractor strict/extracted/fail
+  - normalizer clamp/truncate/list cleanup
+  - heuristics threshold tests (exact boundaries)
+  - brain offline with FakeClient returning valid JSON
+  - brain fail-closed with BadClient raising errors
+  - contracts validate default card is valid
+- Use dependency injection for the client in IntentBrain for tests.
+
+## 9) Implementation Workflow (Follow This Order)
+1) contracts + schema file + validator
+2) errors + config (env/yaml)
+3) parsing (extractor, normalizer) + tests
+4) heuristics + tests
+5) prompt builder + system.txt
+6) OpenRouter client
+7) brain integration
+8) CLI + validate command
+9) demo script + README
+
+## 10) Coding Standards
+- Python 3.10+
+- Type hints for public interfaces
+- Small functions, clear naming, no hidden side effects
+- No global mutable state except metrics counters inside IntentBrain instance
+- No heavy dependencies unless strictly necessary. Prefer stdlib + requests + pyyaml + dotenv only.
+- No network calls in tests.
+
+## 11) Output Discipline
+- Always ensure LeadCard object is returned, never None.
+- Never throw uncaught exceptions from IntentBrain.score().
+- Ensure all strings are trimmed and length-limited to avoid UI blow-ups.
+
+## 12) What NOT to Do (Auto-Reject)
+- Do NOT add Selenium/Playwright/browser automation.
+- Do NOT add "human delay" or any anti-detection features.
+- Do NOT store data to DB in this module.
+- Do NOT change schema fields or enums without updating schema + validator + tests + README.
+
+## 13) Completion Criteria
+You are done ONLY when:
+- `pytest -q` passes
+- `python scripts/demo_score.py` runs (with real key) and prints valid JSON
+- `siw-brain validate --json-file out.json` returns VALID
+- README has clear setup/run/install instructions

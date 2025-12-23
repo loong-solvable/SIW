@@ -1,0 +1,29 @@
+[project]
+name = "siw-intent-brain"
+version = "0.1.0"
+description = "SIW Intent Brain - local-first decision support intent scoring engine"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "PyYAML>=6.0.1",
+    "python-dotenv>=1.0.1",
+]
+
+[project.scripts]
+siw-brain = "siw_intent_brain.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+siw_intent_brain = ["prompt/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+

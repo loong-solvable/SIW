@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siw.local/schemas/lead_card.v1.json",
+  "title": "LeadCard",
+  "description": "SIW Intent Brain output contract - Lead Card V1",
+  "type": "object",
+  "required": [
+    "ok",
+    "scores",
+    "confidence",
+    "lead_tier",
+    "recommended_next_step",
+    "rationale",
+    "extracted_signals",
+    "safety_notes",
+    "meta"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean",
+      "description": "Whether scoring succeeded (false = fail-closed output)"
+    },
+    "scores": {
+      "type": "object",
+      "description": "Four-dimensional intent scores",
+      "required": ["urgency", "pain_point_intensity", "commercial_relevance", "solution_seeking"],
+      "properties": {
+        "urgency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Time pressure signal (deadline, ASAP, urgent)"
+        },
+        "pain_point_intensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Complaint intensity, loss, cost, repeated failures"
+        },
+        "commercial_relevance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Purchasable solution path exists (price, subscription, alternatives)"
+        },
+        "solution_seeking": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Explicitly seeking advice/alternatives/recommendations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Model self-assessed confidence"
+    },
+    "lead_tier": {
+      "type": "string",
+      "enum": ["S", "A", "B", "C", "D"],
+      "description": "Lead quality tier (S=highest, D=lowest)"
+    },
+    "recommended_next_step": {
+      "type": "string",
+      "enum": ["ignore", "monitor", "draft_reply", "ask_question", "offer_resource"],
+      "description": "Recommended action for this lead"
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Brief explanation (<=2 sentences)"
+    },
+    "extracted_signals": {
+      "type": "object",
+      "description": "Extracted intent signals from text",
+      "required": ["problem_summary", "constraints", "budget_hints", "tooling_stack", "keywords"],
+      "properties": {
+        "problem_summary": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "One-line problem summary"
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 50,
+          "description": "User constraints mentioned"
+        },
+        "budget_hints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 50,
+          "description": "Budget/price-related hints"
+        },
+        "tooling_stack": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 50,
+          "description": "Tools/tech stack mentioned"
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 50,
+          "description": "Relevant keywords extracted"
+        }
+      },
+      "additionalProperties": false
+    },
+    "safety_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 50,
+      "description": "Etiquette and spam-risk reminders only"
+    },
+    "meta": {
+      "type": "object",
+      "description": "Request metadata",
+      "required": ["model", "provider", "latency_ms", "retries", "parser_mode", "schema_version"],
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "LLM model used"
+        },
+        "provider": {
+          "type": "string",
+          "const": "openrouter",
+          "description": "Always 'openrouter'"
+        },
+        "latency_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total processing latency in milliseconds"
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of upstream retries"
+        },
+        "parser_mode": {
+          "type": "string",
+          "enum": ["strict", "extracted", "fail_closed"],
+          "description": "JSON parsing mode used"
+        },
+        "schema_version": {
+          "type": "string",
+          "const": "lead_card.v1",
+          "description": "Schema version identifier"
+        },
+        "error_code": {
+          "type": "string",
+          "description": "Error code if ok=false"
+        },
+        "error_detail": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Truncated error detail if ok=false"
+        },
+        "validation_error": {
+          "type": "boolean",
+          "description": "True if contract validation failed"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+
