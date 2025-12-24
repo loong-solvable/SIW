@@ -230,6 +230,34 @@ Outputs 3 LeadCards (high intent, low intent, noise) using a fake client. Useful
 - Understanding output format
 - Demonstrating without API costs
 
+### `siw-brain harvest`
+
+Harvest and score Reddit posts (optional module).
+
+```bash
+siw-brain harvest --sub SaaS --query "alternative" --limit 10
+```
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--sub` | Yes | — | Subreddit name (without r/) |
+| `--query` | No | — | Search query |
+| `--limit` | No | 10 | Maximum posts to fetch |
+| `--sort` | No | new | Sort order (new, hot, top) |
+| `--config` | No | — | Path to config YAML |
+| `--verbose` | No | — | Enable verbose output |
+
+Output: JSONL to stdout (one JSON object per line)
+
+```json
+{"card": {...}, "source_meta": {"created_utc": 1703500000, "score": 42}}
+```
+
+Notes:
+- Requires `OPENROUTER_API_KEY` for scoring
+- Some posts may be skipped if empty; actual count may be less than `--limit`
+- Respects Reddit rate limits (1-2s per request)
+
 ---
 
 ## Configuration

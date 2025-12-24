@@ -61,6 +61,25 @@ def _get_brain(config_path: Optional[str] = None, **kwargs: Any) -> "IntentBrain
     return IntentBrain.from_env(config_path=config_path)
 
 
+# Harvester factory for testing
+_harvester_factory: Optional[Callable[[], Any]] = None
+
+
+def set_harvester_factory(factory: Optional[Callable[[], Any]]) -> None:
+    """Set custom harvester factory for testing."""
+    global _harvester_factory
+    _harvester_factory = factory
+
+
+def _get_harvester():
+    """Get harvester instance (uses factory if set)."""
+    if _harvester_factory is not None:
+        return _harvester_factory()
+    
+    from .harvester import RedditHarvester
+    return RedditHarvester()
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     """
     Main CLI entry point.
@@ -179,6 +198,45 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Enable logging output to stderr (default: off)",
     )
     
+    # =========================================================================
+    # harvest command
+    # =========================================================================
+    harvest_parser = subparsers.add_parser(
+        "harvest",
+        help="Harvest and score Reddit posts",
+        description="Fetch posts from Reddit and score them for commercial intent.",
+    )
+    harvest_parser.add_argument(
+        "--sub",
+        required=True,
+        help="Subreddit name (without r/)",
+    )
+    harvest_parser.add_argument(
+        "--query",
+        help="Search query (optional)",
+    )
+    harvest_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum number of posts to fetch (default: 10)",
+    )
+    harvest_parser.add_argument(
+        "--sort",
+        choices=["new", "hot", "top"],
+        default="new",
+        help="Sort order (default: new)",
+    )
+    harvest_parser.add_argument(
+        "--config",
+        help="Path to config YAML file",
+    )
+    harvest_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output to stderr",
+    )
+    
     # Parse arguments
     args = parser.parse_args(argv)
     
@@ -197,6 +255,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     
     if args.command == "demo":
         return _cmd_demo(args)
+    
+    if args.command == "harvest":
+        return _cmd_harvest(args)
     
     return 1
 
@@ -645,6 +706,77 @@ def _read_context(
     
     # No context provided - return empty dict (valid)
     return {}
+
+
+def _cmd_harvest(args: argparse.Namespace) -> int:
+    """
+    Execute harvest command.
+    
+    Fetches posts from Reddit and scores them.
+    
+    Output: JSONL to stdout (one JSON object per line)
+    Progress: To stderr
+    
+    Returns:
+      0: Success (may have fewer items than limit)
+      1: Config/module error
+    """
+    # --- Enable logging if --verbose ---
+    if getattr(args, "verbose", False):
+        from .telemetry.logging import enable_logging
+        enable_logging(True)
+    
+    # --- Get parameters ---
+    subreddit = args.sub
+    query = getattr(args, "query", None)
+    limit = getattr(args, "limit", 10)
+    sort = getattr(args, "sort", "new")
+    
+    # --- Initialize harvester ---
+    harvester = _get_harvester()
+    
+    # --- Initialize brain ---
+    try:
+        brain = _get_brain(config_path=getattr(args, "config", None))
+    except Exception as e:
+        error_msg = str(e)
+        if "api_key" in error_msg.lower() or "key" in error_msg.lower():
+            print("ERROR: Configuration error (check OPENROUTER_API_KEY)", file=sys.stderr)
+        else:
+            print(f"ERROR: {error_msg}", file=sys.stderr)
+        return 1
+    
+    # --- Harvest ---
+    query_info = f" query='{query}'" if query else ""
+    print(f"Fetching from r/{subreddit}{query_info}...", file=sys.stderr)
+    
+    result = harvester.fetch_posts(subreddit, query=query, limit=limit, sort=sort)
+    
+    # --- Check for errors ---
+    if result.error_message:
+        print(f"WARN: {result.error_message}", file=sys.stderr)
+    
+    # --- Score and output ---
+    scored_count = 0
+    
+    for item in result.items:
+        # Score
+        card = brain.score(text=item["text"], context=item["context"])
+        
+        # Output (include source_meta)
+        output = {
+            "card": card,
+            "source_meta": item.get("_meta", {}),
+        }
+        print(json.dumps(output, ensure_ascii=False))
+        scored_count += 1
+    
+    # --- Summary ---
+    print(
+        f"Done: {scored_count} scored, {result.skipped_count} skipped (empty)",
+        file=sys.stderr
+    )
+    return 0
 
 
 if __name__ == "__main__":

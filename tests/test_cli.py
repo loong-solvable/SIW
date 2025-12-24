@@ -18,9 +18,11 @@ from unittest.mock import patch
 import pytest
 
 from siw_intent_brain import validate_lead_card, BrainConfig
-from siw_intent_brain.cli import main, set_brain_factory
+from siw_intent_brain.cli import main, set_brain_factory, set_harvester_factory
 from siw_intent_brain.brain import IntentBrain
 from siw_intent_brain.llm.types import ChatRequest, ChatResponse
+
+from tests._fixtures import FakeHarvester, FakeHarvesterEmpty, FakeHarvesterWithSkips
 
 
 # =============================================================================
@@ -129,10 +131,11 @@ def invalid_lead_card() -> Dict[str, Any]:
 
 
 @pytest.fixture(autouse=True)
-def reset_brain_factory():
-    """Reset brain factory and logging after each test."""
+def reset_factories():
+    """Reset brain factory, harvester factory, and logging after each test."""
     yield
     set_brain_factory(None)
+    set_harvester_factory(None)
     # Reset logging to default (disabled)
     from siw_intent_brain.telemetry.logging import enable_logging
     enable_logging(False)
@@ -784,4 +787,87 @@ class TestScoreValidation:
             card = json.loads(captured.out)
             errors = validate_lead_card(card)
             assert errors == [], f"Failed for {args}: {errors}"
+
+
+# =============================================================================
+# Test: harvest command
+# =============================================================================
+
+class TestHarvest:
+    """Tests for harvest command (offline with FakeHarvester)."""
+
+    def test_harvest_returns_zero(self, capsys) -> None:
+        """harvest command returns 0."""
+        set_brain_factory(make_fake_brain_factory())
+        set_harvester_factory(lambda: FakeHarvester())
+        
+        result = main(["harvest", "--sub", "test", "--limit", "2"])
+        
+        assert result == 0
+
+    def test_harvest_outputs_jsonl(self, capsys) -> None:
+        """harvest outputs JSONL to stdout."""
+        set_brain_factory(make_fake_brain_factory())
+        set_harvester_factory(lambda: FakeHarvester())
+        
+        main(["harvest", "--sub", "test", "--limit", "2"])
+        
+        captured = capsys.readouterr()
+        # Each line should be valid JSON
+        lines = [l for l in captured.out.strip().split("\n") if l]
+        assert len(lines) == 2
+        
+        for line in lines:
+            obj = json.loads(line)
+            assert "card" in obj
+            assert "source_meta" in obj
+
+    def test_harvest_cards_are_valid(self, capsys) -> None:
+        """harvest output cards pass validation."""
+        set_brain_factory(make_fake_brain_factory())
+        set_harvester_factory(lambda: FakeHarvester())
+        
+        main(["harvest", "--sub", "test", "--limit", "2"])
+        
+        captured = capsys.readouterr()
+        lines = [l for l in captured.out.strip().split("\n") if l]
+        
+        for line in lines:
+            obj = json.loads(line)
+            errors = validate_lead_card(obj["card"])
+            assert errors == []
+
+    def test_harvest_reports_skipped(self, capsys) -> None:
+        """harvest reports skipped posts to stderr."""
+        set_brain_factory(make_fake_brain_factory())
+        set_harvester_factory(lambda: FakeHarvesterWithSkips())
+        
+        main(["harvest", "--sub", "test", "--limit", "5"])
+        
+        captured = capsys.readouterr()
+        # stderr should mention skipped count
+        assert "skipped" in captured.err.lower()
+
+    def test_harvest_handles_empty_result(self, capsys) -> None:
+        """harvest handles empty results gracefully (fail-closed)."""
+        set_brain_factory(make_fake_brain_factory())
+        set_harvester_factory(lambda: FakeHarvesterEmpty())
+        
+        result = main(["harvest", "--sub", "test"])
+        
+        # Should still return 0 (fail-closed, not crash)
+        assert result == 0
+        captured = capsys.readouterr()
+        # stderr should mention error/warning
+        assert "warn" in captured.err.lower()
+        # stdout should be empty (no cards)
+        lines = [l for l in captured.out.strip().split("\n") if l]
+        assert len(lines) == 0
+
+    def test_harvest_requires_sub(self, capsys) -> None:
+        """harvest requires --sub argument."""
+        with pytest.raises(SystemExit) as exc_info:
+            main(["harvest"])
+        # argparse exits with 2 for missing required args
+        assert exc_info.value.code == 2
 

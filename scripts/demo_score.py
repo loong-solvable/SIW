@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from rich import print_json
 
 
 def main() -> int:
@@ -125,7 +126,7 @@ def main() -> int:
             card = brain.score(text=sample["text"], context=sample["context"])
             
             # Output LeadCard JSON to stdout
-            print(json.dumps(card, ensure_ascii=False, indent=2))
+            print_json(json.dumps(card, ensure_ascii=False, indent=2))
             
             # Validate and report
             errors = validate_lead_card(card)
