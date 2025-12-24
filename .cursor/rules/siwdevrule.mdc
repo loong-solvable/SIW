@@ -8,24 +8,35 @@ alwaysApply: true
 
 ## 0) Project Mission (Non-negotiable)
 - Build "SIW Intent Brain": a Local-first, BYOK, Decision Support engine that scores intent from text and returns a strict Lead Card JSON.
-- The system must NOT implement or suggest any automation for posting, session/cookie manipulation, bypassing platform rules, evasion, or "anti-detection" behaviors.
+- The system supports **read-only data harvesting** from public platforms (e.g., Reddit .json endpoints) for intent scoring purposes.
+- The system must NOT implement or suggest any automation for:
+  - Posting, replying, or any write operations to platforms
+  - Session/cookie manipulation or account impersonation
+  - Bypassing authentication or CAPTCHA systems
 - Always produce contract-valid output, even on failure (fail-closed).
 
 ## 1) Golden Deliverables
 You MUST deliver:
 1) A pip-installable Python package: `siw_intent_brain`
-2) CLI: `siw-brain score` and `siw-brain validate`
+2) CLI: `siw-brain score`, `siw-brain validate`, `siw-brain doctor`, `siw-brain demo`, `siw-brain harvest` (optional)
 3) JSON Schema file: `schemas/lead_card.v1.json`
 4) Complete unit tests (offline, no network required) + demo script `scripts/demo_score.py`
 5) README with install/config/run/test instructions
 
-## 2) Architecture Lock (Do NOT change structure)
-- Keep the exact folder/module structure from the implementation spec.
+## 2) Architecture Lock
+- Keep the folder/module structure consistent.
 - Do NOT merge everything into one file.
+- Allowed module directories:
+  - `llm/` - LLM client (OpenRouter)
+  - `parsing/` - JSON extraction and normalization
+  - `heuristics/` - Tiering and next_step logic
+  - `prompt/` - Prompt templates
+  - `telemetry/` - Logging and metrics
+  - `harvester/` - Data harvesting clients (Reddit, etc.) [OPTIONAL EXTENSION]
 - Respect dependency directions:
   - `brain.py` can import everything.
   - core modules MUST NOT import CLI modules.
-  - tests MUST run without network by injecting FakeClient.
+  - tests MUST run without network by injecting FakeClient/FakeHarvester.
 
 ## 3) Strict Contract (Hard Requirement)
 - Implement `schemas/lead_card.v1.json` and ensure all outputs conform.
@@ -89,6 +100,7 @@ You MUST deliver:
   - brain offline with FakeClient returning valid JSON
   - brain fail-closed with BadClient raising errors
   - contracts validate default card is valid
+  - harvester offline with FakeHarvester returning mock data (if harvester implemented)
 - Use dependency injection for the client in IntentBrain for tests.
 
 ## 9) Implementation Workflow (Follow This Order)
@@ -101,6 +113,7 @@ You MUST deliver:
 7) brain integration
 8) CLI + validate command
 9) demo script + README
+10) [OPTIONAL] harvester module + harvest CLI command
 
 ## 10) Coding Standards
 - Python 3.10+
@@ -108,7 +121,7 @@ You MUST deliver:
 - Small functions, clear naming, no hidden side effects
 - No global mutable state except metrics counters inside IntentBrain instance
 - No heavy dependencies unless strictly necessary. Prefer stdlib + requests + pyyaml + dotenv only.
-- No network calls in tests.
+- No network calls in tests (use FakeClient/FakeHarvester with mock data).
 
 ## 11) Output Discipline
 - Always ensure LeadCard object is returned, never None.
@@ -117,13 +130,28 @@ You MUST deliver:
 
 ## 12) What NOT to Do (Auto-Reject)
 - Do NOT add Selenium/Playwright/browser automation.
-- Do NOT add "human delay" or any anti-detection features.
+- Do NOT implement posting, replying, or any write operations to external platforms.
+- Do NOT manipulate sessions, cookies, or impersonate user accounts.
+- Do NOT bypass CAPTCHA or authentication systems.
 - Do NOT store data to DB in this module.
 - Do NOT change schema fields or enums without updating schema + validator + tests + README.
 
-## 13) Completion Criteria
+## 13) Harvester Module Rules (Optional Extension)
+If implementing data harvesting:
+- Use only public, unauthenticated APIs (e.g., Reddit .json endpoints).
+- Respect platform rate limits: implement appropriate request delays.
+- Handle 429/503 errors gracefully with exponential backoff.
+- Log requests at INFO level (no sensitive data).
+- Harvester output must be compatible with IntentBrain.score() input format:
+  - `text`: The content to analyze (title + body)
+  - `context`: Metadata dict (subreddit, author, permalink, etc.)
+- Fail-closed: If harvesting fails, return empty results, do NOT crash.
+- Tests must use FakeHarvester with pre-recorded mock responses.
+
+## 14) Completion Criteria
 You are done ONLY when:
 - `pytest -q` passes
 - `python scripts/demo_score.py` runs (with real key) and prints valid JSON
 - `siw-brain validate --json-file out.json` returns VALID
 - README has clear setup/run/install instructions
+- [If harvester implemented] `siw-brain harvest --sub test --limit 1` works with mock or real data
