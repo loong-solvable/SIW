@@ -34,6 +34,28 @@ if TYPE_CHECKING:
     from .brain import IntentBrain
 
 
+def _configure_std_streams() -> None:
+    """Configure stdout/stderr for UTF-8 to avoid encode errors on Windows."""
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+    try:
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+
+def _print_json(obj: Any, indent: Optional[int] = None) -> None:
+    """Print JSON safely, falling back to ASCII escapes on encode errors."""
+    try:
+        print(json.dumps(obj, ensure_ascii=False, indent=indent))
+    except UnicodeEncodeError:
+        print(json.dumps(obj, ensure_ascii=True, indent=indent))
+
+
 # Factory function for IntentBrain - can be replaced in tests
 _brain_factory: Optional[Callable[..., "IntentBrain"]] = None
 
@@ -95,6 +117,7 @@ def main(argv: Optional[list[str]] = None) -> int:
       1: Input/file/config error
       2: Validation failed (validate command)
     """
+    _configure_std_streams()
     parser = argparse.ArgumentParser(
         prog="siw-brain",
         description="SIW Intent Brain - Decision support intent scoring engine",
@@ -330,9 +353,9 @@ def _cmd_score(args: argparse.Namespace) -> int:
     
     # --- Output ---
     if getattr(args, "quiet", False):
-        print(json.dumps(card, ensure_ascii=False))
+        _print_json(card)
     else:
-        print(json.dumps(card, ensure_ascii=False, indent=2))
+        _print_json(card, indent=2)
     
     return 0
 
@@ -601,7 +624,7 @@ def _cmd_demo(args: argparse.Namespace) -> int:
         
         card = brain.score(text=sample["text"], context=sample["context"])
         # LeadCard JSON goes to stdout
-        print(json.dumps(card, ensure_ascii=False, indent=2))
+        _print_json(card, indent=2)
         
         # Validate
         errors = validate_lead_card(card)
@@ -768,7 +791,7 @@ def _cmd_harvest(args: argparse.Namespace) -> int:
             "card": card,
             "source_meta": item.get("_meta", {}),
         }
-        print(json.dumps(output, ensure_ascii=False))
+        _print_json(output)
         scored_count += 1
     
     # --- Summary ---
