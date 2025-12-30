@@ -99,8 +99,18 @@ def _normalize_to_lead_card(obj: Any) -> Tuple[Dict[str, Any] | None, str | None
     Normalize parsed JSON to LeadCard format.
     
     Handles:
-      1. {"card": {...}} wrapper (harvest output)
+      1. {"card": {...}, "source_meta": {...}} wrapper (harvest output)
       2. Direct LeadCard dict
+    
+    When processing harvest output, extracts source metadata and attaches it
+    to the card as "_source" field for use in report rendering:
+      - author: Reddit username
+      - permalink: Link to original post
+      - subreddit: Source subreddit
+      - title: Original post title
+      - created_utc: Post creation timestamp
+      - score: Reddit upvotes
+      - num_comments: Comment count
     
     Returns:
       (lead_card_dict, None) on success
@@ -111,7 +121,33 @@ def _normalize_to_lead_card(obj: Any) -> Tuple[Dict[str, Any] | None, str | None
     
     # Check for harvest wrapper format
     if "card" in obj and isinstance(obj["card"], dict):
-        return obj["card"], None
+        card = obj["card"]
+        
+        # Extract source metadata for report rendering
+        source_info: Dict[str, Any] = {}
+        
+        # From source_meta (harvest output metadata: score, comments, etc.)
+        source_meta = obj.get("source_meta", {})
+        if isinstance(source_meta, dict):
+            source_info["created_utc"] = source_meta.get("created_utc")
+            source_info["score"] = source_meta.get("score")
+            source_info["num_comments"] = source_meta.get("num_comments")
+            source_info["post_id"] = source_meta.get("id")
+            source_info["url"] = source_meta.get("url")
+        
+        # From source_context (harvest output: author, permalink, subreddit, title)
+        source_context = obj.get("source_context", {})
+        if isinstance(source_context, dict):
+            source_info["author"] = source_context.get("author")
+            source_info["permalink"] = source_context.get("permalink")
+            source_info["subreddit"] = source_context.get("subreddit")
+            source_info["title"] = source_context.get("title")
+        
+        # Attach source info if we found any useful data
+        if any(v for v in source_info.values() if v):
+            card["_source"] = source_info
+        
+        return card, None
     
     # Treat as direct LeadCard
     return obj, None

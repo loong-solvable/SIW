@@ -173,6 +173,48 @@ class TestReader:
         assert len(records) == 0
         assert len(invalid_lines) == 1
         assert "schema invalid" in invalid_lines[0]["reason"]
+    
+    def test_read_harvest_format_with_source_info(self, tmp_path: Path):
+        """Test that harvest output with source_meta and source_context is properly extracted."""
+        from siw_intent_brain.report.reader import read_candidates_jsonl
+        
+        card = _make_valid_lead_card(tier="S", confidence=0.95)
+        # Full harvest output format (as produced by CLI harvest command)
+        wrapper = {
+            "card": card,
+            "source_meta": {
+                "created_utc": 1703980800,
+                "score": 42,
+                "num_comments": 15,
+                "id": "abc123",
+                "url": "https://reddit.com/r/SaaS/comments/abc123/",
+            },
+            "source_context": {
+                "subreddit": "SaaS",
+                "author": "business_user",
+                "permalink": "/r/SaaS/comments/abc123/looking_for_crm/",
+                "title": "Looking for CRM alternative",
+            },
+        }
+        
+        jsonl_path = tmp_path / "harvest_full.jsonl"
+        with open(jsonl_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps(wrapper) + "\n")
+        
+        records, invalid_lines = read_candidates_jsonl(jsonl_path)
+        
+        assert len(records) == 1
+        assert len(invalid_lines) == 0
+        
+        # Check that _source field is attached with all metadata
+        source = records[0].get("_source", {})
+        assert source.get("author") == "business_user"
+        assert source.get("subreddit") == "SaaS"
+        assert source.get("permalink") == "/r/SaaS/comments/abc123/looking_for_crm/"
+        assert source.get("title") == "Looking for CRM alternative"
+        assert source.get("score") == 42
+        assert source.get("num_comments") == 15
+        assert source.get("created_utc") == 1703980800
 
 
 # =============================================================================

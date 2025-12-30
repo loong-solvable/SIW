@@ -468,6 +468,54 @@ def render_report(
             header_text = f"#{i} | Tier: {tier} | Confidence: {confidence:.2f} | Next Step: {next_step}"
             story.append(Paragraph(header_text, subheading_style))
             
+            # Source info (author + Reddit link) - extracted from harvest output
+            source = card.get("_source", {})
+            if source:
+                author = source.get("author", "")
+                permalink = source.get("permalink", "")
+                subreddit = source.get("subreddit", "")
+                post_score = source.get("score")
+                num_comments = source.get("num_comments")
+                
+                source_parts = []
+                
+                # Author with u/ prefix
+                if author:
+                    source_parts.append(f"User: u/{safe_text(author)}")
+                
+                # Subreddit with r/ prefix
+                if subreddit:
+                    source_parts.append(f"r/{safe_text(subreddit)}")
+                
+                # Reddit stats (upvotes, comments)
+                stats_parts = []
+                if post_score is not None:
+                    stats_parts.append(f"{post_score} pts")
+                if num_comments is not None:
+                    stats_parts.append(f"{num_comments} comments")
+                if stats_parts:
+                    source_parts.append(" | ".join(stats_parts))
+                
+                # Build source line with clickable link
+                if source_parts:
+                    source_line = " | ".join(source_parts)
+                    if permalink:
+                        # Make the permalink clickable (full Reddit URL)
+                        reddit_url = f"https://www.reddit.com{permalink}"
+                        source_line += f' | <link href="{reddit_url}"><font color="blue">[View on Reddit]</font></link>'
+                    
+                    # Use a distinct style for source info
+                    source_style = ParagraphStyle(
+                        'SourceInfo',
+                        parent=styles['Normal'],
+                        fontName=font_name,
+                        fontSize=9,
+                        textColor=colors.Color(0.3, 0.3, 0.5),  # Muted blue-grey
+                        spaceBefore=2,
+                        spaceAfter=4,
+                    )
+                    story.append(Paragraph(source_line, source_style))
+            
             # Scores table
             scores = card.get("scores", {})
             scores_data = [

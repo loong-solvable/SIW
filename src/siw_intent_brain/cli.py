@@ -824,10 +824,11 @@ def _cmd_harvest(args: argparse.Namespace) -> int:
         # Score
         card = brain.score(text=item["text"], context=item["context"])
         
-        # Output (include source_meta)
+        # Output (include source_meta and context for report rendering)
         output = {
             "card": card,
             "source_meta": item.get("_meta", {}),
+            "source_context": item.get("context", {}),  # author, permalink, etc.
         }
         _print_json(output)
         scored_count += 1

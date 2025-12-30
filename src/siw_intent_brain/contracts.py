@@ -189,7 +189,8 @@ def validate_lead_card(obj: Dict[str, Any]) -> List[str]:
         return errors
     
     # --- Check for unexpected top-level keys (additionalProperties: false) ---
-    extra_top = set(obj.keys()) - _ALLOWED_TOP_KEYS
+    # Allow private keys (starting with _) for internal use (e.g., _source for report metadata)
+    extra_top = set(k for k in obj.keys() if not k.startswith("_")) - _ALLOWED_TOP_KEYS
     if extra_top:
         errors.append(f"Unexpected top-level keys: {sorted(extra_top)}")
     
