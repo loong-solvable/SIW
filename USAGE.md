@@ -180,6 +180,61 @@ siw-brain harvest --sub SaaS --query "alternative" --limit 5
 - 仍需要 `OPENROUTER_API_KEY` 来评分。
 - 抓取失败时返回空结果 (fail-closed) 并输出 WARN。
 
+### 4.6 report
+
+从 LeadCard JSONL 生成 PDF 报告。
+
+```bash
+siw-brain report --in candidates.jsonl --out report.pdf --top 20
+```
+
+参数：
+- `--in` JSONL 输入文件路径；`-` 或省略表示 stdin
+- `--out` (必需) 输出 PDF 文件路径
+- `--top` 包含的顶部卡片数量 (默认: 20)
+- `--verbose` 启用日志
+
+输入格式：
+- 纯 LeadCard JSONL (每行一个 LeadCard JSON)
+- harvest 输出格式 (每行包含 `{"card": {...}, "source_meta": {...}}`)
+- 两种格式都支持
+
+输出：
+- A4 PDF 报告，包含：
+  - 摘要统计 (总数、层级分布、平均分数等)
+  - 顶部商机卡片
+  - 无效行附录
+
+返回码：
+- 0: 成功
+- 1: 输入/文件/编码/JSON/验证/依赖错误
+- 2: 渲染错误 (PDF 生成失败)
+
+示例：
+
+```powershell
+# 直接从文件生成报告（推荐）
+siw-brain report --in candidates.jsonl --out report.pdf
+
+# 与 harvest 配合使用（推荐）
+siw-brain harvest --sub SaaS --limit 10 > results.jsonl
+siw-brain report --in results.jsonl --out saas_report.pdf --top 10
+```
+
+PowerShell 管道输入注意事项：
+
+PowerShell 默认使用 UTF-16 编码进行管道传输，report 命令已内置编码自动检测。
+但为确保最佳兼容性，推荐使用文件输入方式：
+
+```powershell
+# 推荐：先保存到文件，再生成报告
+siw-brain harvest --sub SaaS --limit 10 | Out-File -Encoding utf8 results.jsonl
+siw-brain report --in results.jsonl --out report.pdf
+
+# 如需使用管道，命令会自动检测 UTF-16 编码
+Get-Content candidates.jsonl | siw-brain report --in - --out report.pdf
+```
+
 ## 5. Python API 使用
 
 ### 5.1 基本用法

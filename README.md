@@ -258,6 +258,57 @@ Notes:
 - Some posts may be skipped if empty; actual count may be less than `--limit`
 - Respects Reddit rate limits (1-2s per request)
 
+### `siw-brain report`
+
+Generate PDF report from LeadCard JSONL.
+
+```bash
+siw-brain report --in candidates.jsonl --out report.pdf --top 20
+```
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--in` | No | stdin | Input JSONL file path (or `-` for stdin) |
+| `--out` | Yes | — | Output PDF file path |
+| `--top` | No | 20 | Number of top cards to include |
+| `--verbose` | No | — | Enable verbose output |
+
+**Input formats supported:**
+- Pure LeadCard JSONL (one LeadCard JSON per line)
+- Harvest output format (`{"card": {...}, "source_meta": {...}}`)
+
+**Output:**
+- A4 PDF report with:
+  - Summary statistics (counts, tier distribution, mean scores)
+  - Top keywords and budget hints
+  - Top opportunity cards (sorted by tier/confidence)
+  - Invalid lines appendix
+
+| Exit Code | Meaning |
+|-----------|---------|
+| 0 | Success |
+| 1 | Input/file/encoding/dependency error |
+| 2 | PDF render error |
+
+**Examples:**
+
+```bash
+# Generate report from file
+siw-brain report --in candidates.jsonl --out report.pdf
+
+# Harvest + report pipeline
+siw-brain harvest --sub SaaS --limit 20 > results.jsonl
+siw-brain report --in results.jsonl --out saas_report.pdf --top 10
+
+# Verbose mode shows progress
+siw-brain report --in candidates.jsonl --out report.pdf --verbose
+```
+
+Notes:
+- Non-verbose mode is silent (stderr only on errors)
+- Uses system CJK fonts if available (Windows: SimSun, macOS: PingFang)
+- Non-ASCII without CJK font support shows `?` replacement
+
 ---
 
 ## Configuration

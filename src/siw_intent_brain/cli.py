@@ -6,6 +6,8 @@ Commands:
   - validate: Validate a lead card JSON file
   - doctor: Check system environment and dependencies
   - demo: Run offline demo with sample texts
+  - harvest: Harvest and score Reddit posts
+  - report: Generate PDF report from LeadCard JSONL
 
 Usage:
   siw-brain score --text "..." --context-json '{...}'
@@ -14,6 +16,8 @@ Usage:
   siw-brain validate --json-file output.json
   siw-brain doctor
   siw-brain demo
+  siw-brain harvest --sub SaaS --query "alternative" --limit 10
+  siw-brain report --in candidates.jsonl --out report.pdf --top 20
 
 NEVER prints API key or sensitive data.
 """
@@ -260,6 +264,37 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Enable verbose output to stderr",
     )
     
+    # =========================================================================
+    # report command
+    # =========================================================================
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Generate PDF report from LeadCard JSONL",
+        description="Convert LeadCard JSONL outputs into a human-readable A4 PDF report.",
+    )
+    report_parser.add_argument(
+        "--in",
+        dest="input_file",
+        help="Input JSONL file path; '-' or omit for stdin",
+    )
+    report_parser.add_argument(
+        "--out",
+        dest="output_file",
+        required=True,
+        help="Output PDF file path",
+    )
+    report_parser.add_argument(
+        "--top",
+        type=int,
+        default=20,
+        help="Number of top cards to include (default: 20)",
+    )
+    report_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output to stderr",
+    )
+    
     # Parse arguments
     args = parser.parse_args(argv)
     
@@ -281,6 +316,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     
     if args.command == "harvest":
         return _cmd_harvest(args)
+    
+    if args.command == "report":
+        return _cmd_report(args)
     
     return 1
 
@@ -799,6 +837,92 @@ def _cmd_harvest(args: argparse.Namespace) -> int:
         f"Done: {scored_count} scored, {result.skipped_count} skipped (empty)",
         file=sys.stderr
     )
+    return 0
+
+
+def _cmd_report(args: argparse.Namespace) -> int:
+    """
+    Execute report command.
+    
+    Generates PDF report from LeadCard JSONL.
+    
+    Exit codes:
+      0: Success
+      1: Input/file/encoding/JSON/validation/dependency errors
+      2: Render errors (PDF build failures)
+    """
+    # --- Enable logging if --verbose ---
+    verbose = getattr(args, "verbose", False)
+    if verbose:
+        from .telemetry.logging import enable_logging
+        enable_logging(True)
+    
+    # --- Import report module ---
+    try:
+        from .report import read_candidates_jsonl, select_top, compute_stats, render_report
+    except ImportError as e:
+        print(f"ERROR: Failed to import report module: {e}", file=sys.stderr)
+        return 1
+    
+    # --- Determine input source ---
+    input_file = getattr(args, "input_file", None)
+    output_file = getattr(args, "output_file", None)
+    top_n = getattr(args, "top", 20)
+    
+    # Input: stdin if "--in -" or (no --in and stdin not TTY)
+    from_stdin = False
+    if input_file == "-":
+        from_stdin = True
+        input_file = None
+    elif input_file is None and not sys.stdin.isatty():
+        from_stdin = True
+    
+    # --- Read JSONL ---
+    try:
+        if from_stdin:
+            records, invalid_lines = read_candidates_jsonl(
+                None, from_stdin=True, verbose=verbose
+            )
+            input_filename = "stdin"
+        else:
+            if input_file is None:
+                print("ERROR: No input provided. Use --in or pipe JSONL via stdin.", file=sys.stderr)
+                return 1
+            records, invalid_lines = read_candidates_jsonl(input_file, verbose=verbose)
+            input_filename = input_file
+    except Exception as e:
+        print(f"ERROR: Failed to read input: {e}", file=sys.stderr)
+        return 1
+    
+    # --- Log summary (verbose only) ---
+    if verbose:
+        print(f"Read {len(records)} valid records, {len(invalid_lines)} invalid lines", file=sys.stderr)
+    
+    # --- Select top cards ---
+    top_cards = select_top(records, top_n)
+    
+    # --- Compute stats ---
+    stats = compute_stats(records, invalid_lines)
+    
+    # --- Render PDF ---
+    try:
+        render_report(
+            records=top_cards,
+            stats=stats,
+            invalid_lines=invalid_lines,
+            out_path=output_file,
+            input_filename=input_filename,
+            verbose=verbose,
+        )
+    except ImportError as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"ERROR: Failed to render PDF: {e}", file=sys.stderr)
+        return 2
+    
+    if verbose:
+        print(f"Report written to: {output_file}", file=sys.stderr)
     return 0
 
 

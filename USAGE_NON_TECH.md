@@ -1,20 +1,20 @@
 ﻿# SIW Intent Brain 使用说明（小白可用）
 
-这份说明尽量“少术语、可复制”。你只需要照着做。
+这份说明尽量"少术语、可复制"。你只需要照着做。
 
 ---
 
 ## 你需要准备的东西
 
 1) **Python 3.10+**
-   - 这是运行工具的“启动器”。
-   - 安装时勾选 “Add Python to PATH”。
+   - 这是运行工具的"启动器"。
+   - 安装时勾选 "Add Python to PATH"。
 
 2) **项目文件夹**
    - 你的项目在 `D:\code\SIW`（下面示例按这个路径写）。
 
 3) **OpenRouter API Key**
-   - 这是让工具“真正评分”的钥匙。
+   - 这是让工具"真正评分"的钥匙。
    - 去 OpenRouter 官网生成一个 Key，复制好备用。
 
 ---
@@ -47,7 +47,7 @@ pip install rich
 
 ## 每次使用前（每次打开新窗口都要做）
 
-这一步是告诉工具：“用哪个 Key 去评分”。
+这一步是告诉工具："用哪个 Key 去评分"。
 
 ```powershell
 # 进入项目文件夹
@@ -62,10 +62,10 @@ $env:OPENROUTER_API_KEY = "sk-or-v1-你的Key"
 
 ---
 
-## 最常用的 3 个命令（记住它们）
+## 最常用的 4 个命令
 
 ### 1) 检查环境
-“看看能不能正常跑”。
+"看看能不能正常跑"。
 
 ```powershell
 siw-brain doctor
@@ -75,8 +75,8 @@ siw-brain doctor
 
 ---
 
-### 2) 直接评分一句话（生成单个文件）
-“我给一句话 → 输出一个结果”。
+### 2) 直接评分一句话
+"我给一句话 → 输出一个结果"。
 
 ```powershell
 siw-brain score --text "我在找一个更便宜的 ToolX 替代品" | Out-File -Encoding utf8 out.json
@@ -91,8 +91,8 @@ siw-brain validate --json-file out.json
 
 ---
 
-### 3) 从 Reddit 抓取并批量评分（生成 candidates.jsonl）
-“自动抓 10 条 → 每条评分 → 保存到文件”。
+### 3) 从 Reddit 抓取并批量评分
+"自动抓 10 条 → 每条评分 → 保存到文件"。
 
 ```powershell
 siw-brain harvest --sub SaaS --query "expensive" --limit 10 |
@@ -105,36 +105,62 @@ siw-brain harvest --sub SaaS --query "expensive" --limit 10 |
 
 ---
 
+### 4) 生成 PDF 报告
+"把 candidates.jsonl 变成漂亮的 PDF"。
+
+```powershell
+siw-brain report --in candidates.jsonl --out report.pdf --top 20
+```
+
+- 这会生成 `report.pdf`（A4 格式）。
+- 报告包含：摘要统计、顶部商机卡片、无效行附录。
+- `--top 20` 表示只包含前 20 个最佳商机。
+
+想看详细进度？加 `--verbose`：
+
+```powershell
+siw-brain report --in candidates.jsonl --out report.pdf --top 20 --verbose
+```
+
+---
+
+## 完整工作流示例（从抓取到报告）
+
+下面是一个完整的例子，从抓取 Reddit 帖子到生成 PDF 报告：
+
+```powershell
+# 第 1 步：抓取并评分（保存到 jsonl 文件）
+siw-brain harvest --sub SaaS --query "alternative" --limit 20 |
+  ForEach-Object { ($_ | ConvertFrom-Json).card | ConvertTo-Json -Compress -Depth 20 } |
+  Out-File -Encoding utf8 candidates.jsonl
+
+# 第 2 步：生成 PDF 报告
+siw-brain report --in candidates.jsonl --out report.pdf --top 10 --verbose
+
+# 完成！打开 report.pdf 查看结果
+```
+
+---
+
 ## 怎么改参数（改哪里就换哪里）
 
-下面是常见参数的含义：
+### harvest 命令参数
 
-- `--sub`：要抓哪个版块（例如 SaaS）
-- `--query`：必须包含的关键词（例如 expensive）
-- `--limit`：抓多少条（例如 10）
-- `--sort`：排序方式（new / hot / top）
+| 参数 | 含义 | 例子 |
+|------|------|------|
+| `--sub` | 要抓哪个版块 | `--sub SaaS` / `--sub marketing` |
+| `--query` | 必须包含的关键词 | `--query "expensive"` / `--query "pricing"` |
+| `--limit` | 抓多少条 | `--limit 10` / `--limit 30` |
+| `--sort` | 排序方式 | `--sort new` / `--sort hot` / `--sort top` |
 
-例子：
+### report 命令参数
 
-- 改版块：
-  ```powershell
-  --sub SaaS  ->  --sub marketing
-  ```
-
-- 改关键词：
-  ```powershell
-  --query "expensive"  ->  --query "pricing"
-  ```
-
-- 改数量：
-  ```powershell
-  --limit 10  ->  --limit 30
-  ```
-
-- 改排序：
-  ```powershell
-  --sort new  ->  --sort hot
-  ```
+| 参数 | 含义 | 例子 |
+|------|------|------|
+| `--in` | 输入文件 | `--in candidates.jsonl` |
+| `--out` | 输出 PDF 文件 | `--out report.pdf` |
+| `--top` | 包含前 N 个最佳商机 | `--top 20` / `--top 10` |
+| `--verbose` | 显示详细进度 | `--verbose` |
 
 ---
 
@@ -147,6 +173,11 @@ siw-brain harvest --sub SaaS --query "expensive" --limit 10 |
 ### 2) `candidates.jsonl`（多条结果）
 - 每行一个 LeadCard
 - 适合：批量分析、筛选、后续导入数据工具
+
+### 3) `report.pdf`（PDF 报告）
+- 人类可读的 A4 报告
+- 包含：统计摘要、层级分布、关键词、顶部商机卡片
+- 适合：分享给团队、打印、汇报
 
 ---
 
@@ -174,7 +205,7 @@ siw-brain harvest --sub SaaS --query "expensive" --limit 10 |
 ## 常见问题
 
 ### 1) 提示 API Key 缺失
-- 重新执行“每次使用前”的 Key 设置步骤。
+- 重新执行"每次使用前"的 Key 设置步骤。
 
 ### 2) 没输出 / 输出很少
 - 可能是关键词太少或版块没有符合的内容。
@@ -193,9 +224,14 @@ $env:PYTHONIOENCODING = "utf-8"
 $env:PYTHONUTF8 = "1"
 ```
 
-再重新运行你的 `harvest` 命令即可。
+再重新运行你的命令即可。
 
-### 5) demo_score.py 报 `ImportError: rich`
+### 5) PDF 报告中文显示为问号 (?)
+- 这是因为系统没有安装 CJK 字体或字体无法加载。
+- Windows 系统通常会自动使用宋体 (SimSun)。
+- 用 `--verbose` 查看是否有字体警告。
+
+### 6) demo_score.py 报 `ImportError: rich`
 - 执行：
   ```powershell
   pip install rich
@@ -203,4 +239,17 @@ $env:PYTHONUTF8 = "1"
 
 ---
 
-如果你告诉我“你想要什么效果”，我可以直接给你一条能用的命令。
+## 快速参考卡片
+
+| 我想做什么 | 命令 |
+|------------|------|
+| 检查环境 | `siw-brain doctor` |
+| 评分单条文字 | `siw-brain score --text "..." \| Out-File -Encoding utf8 out.json` |
+| 从 Reddit 抓取评分 | `siw-brain harvest --sub SaaS --limit 10 \| ... \| Out-File ...` |
+| 生成 PDF 报告 | `siw-brain report --in candidates.jsonl --out report.pdf` |
+| 验证 JSON 文件 | `siw-brain validate --json-file out.json` |
+| 离线演示 | `siw-brain demo` |
+
+---
+
+如果你告诉我"你想要什么效果"，我可以直接给你一条能用的命令。
