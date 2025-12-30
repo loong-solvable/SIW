@@ -1,0 +1,1101 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SIW Intent Brain | Reddit Intent Reports</title>
+    <meta
+      name="description"
+      content="Trusted Reddit intent intelligence reports that turn real demand into actionable opportunities."
+    />
+    <meta
+      property="og:title"
+      content="SIW Intent Brain | Reddit Intent Reports"
+    />
+    <meta
+      property="og:description"
+      content="Turn real Reddit demand into actionable opportunities."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #121418;
+        --muted: #5c636a;
+        --paper: #f6f1e8;
+        --paper-strong: #fdfbf7;
+        --accent: #0f766e;
+        --accent-2: #b45309;
+        --line: #e3dbcf;
+        --shadow: 0 22px 50px rgba(18, 20, 24, 0.16);
+        --radius-lg: 22px;
+        --radius-md: 14px;
+        --radius-sm: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", "Helvetica Neue", sans-serif;
+        color: var(--ink);
+        background: radial-gradient(
+              900px 520px at 90% -10%,
+              rgba(253, 230, 138, 0.5),
+              transparent 65%
+            ),
+          radial-gradient(
+              900px 580px at -10% 10%,
+              rgba(167, 243, 208, 0.45),
+              transparent 62%
+            ),
+          linear-gradient(180deg, #fdfbf7 0%, #f2ebe0 100%);
+        min-height: 100vh;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .orb {
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(10px);
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .orb.orb-1 {
+        width: 380px;
+        height: 380px;
+        background: #fed7aa;
+        top: -140px;
+        right: -140px;
+      }
+
+      .orb.orb-2 {
+        width: 300px;
+        height: 300px;
+        background: #a7f3d0;
+        bottom: 120px;
+        left: -120px;
+      }
+
+      .container {
+        width: min(1120px, 92vw);
+        margin: 0 auto;
+      }
+
+      header {
+        padding: 28px 0 0;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .logo {
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-size: 1.2rem;
+        letter-spacing: 0.4px;
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 18px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .nav-links a {
+        position: relative;
+        padding-bottom: 4px;
+      }
+
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: transparent;
+        transition: background 0.2s ease;
+      }
+
+      .nav-links a:hover::after {
+        background: var(--accent);
+      }
+
+      .lang-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.7);
+        padding: 4px;
+      }
+
+      .lang-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .lang-btn.is-active {
+        background: var(--ink);
+        color: #fdfbf7;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 32px;
+        padding: clamp(48px, 8vw, 96px) 0 40px;
+      }
+
+      .hero-copy {
+        grid-column: span 7;
+      }
+
+      .eyebrow {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-weight: 600;
+        font-size: clamp(2.4rem, 4vw, 3.6rem);
+        margin: 0 0 18px;
+        line-height: 1.1;
+      }
+
+      .hero p {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: var(--muted);
+        margin: 0 0 24px;
+      }
+
+      .cta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, box-shadow 0.2s ease,
+          background 0.2s ease, color 0.2s ease;
+      }
+
+      .button.primary {
+        background: var(--accent);
+        color: #fffaf5;
+        box-shadow: 0 12px 28px rgba(15, 118, 110, 0.25);
+      }
+
+      .button.secondary {
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.7);
+        color: var(--ink);
+      }
+
+      .button:hover {
+        transform: translateY(-2px);
+      }
+
+      .hero-card {
+        grid-column: span 5;
+        background: var(--paper-strong);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        border: 1px solid var(--line);
+      }
+
+      .card-label {
+        font-size: 0.8rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+
+      .report-preview {
+        display: grid;
+        gap: 14px;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .report-preview strong {
+        color: var(--ink);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 26px;
+      }
+
+      .metric {
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .metric span {
+        display: block;
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-size: 1.3rem;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+
+      section {
+        padding: 40px 0;
+      }
+
+      .section-title {
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+        margin: 0 0 14px;
+      }
+
+      .section-lead {
+        color: var(--muted);
+        margin-bottom: 28px;
+        max-width: 720px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        padding: 20px;
+      }
+
+      .panel h3 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+
+      .panel p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .steps {
+        display: grid;
+        gap: 16px;
+      }
+
+      .step {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .step-number {
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-size: 1.4rem;
+        color: var(--accent-2);
+      }
+
+      .sample-block {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .sample-card {
+        background: var(--ink);
+        color: #f8f5ef;
+        border-radius: var(--radius-lg);
+        padding: 26px;
+        box-shadow: var(--shadow);
+      }
+
+      .sample-card h4 {
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+      }
+
+      .sample-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+        font-size: 0.92rem;
+        color: rgba(248, 245, 239, 0.78);
+      }
+
+      .sample-card li span {
+        color: #fef9e7;
+        font-weight: 600;
+      }
+
+      .pricing {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .pricing-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      .pricing-card h3 {
+        margin: 0 0 8px;
+      }
+
+      .pricing-card p {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+
+      .tag {
+        display: inline-flex;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.1);
+        color: var(--accent);
+        font-size: 0.82rem;
+        margin-bottom: 12px;
+      }
+
+      .faq {
+        display: grid;
+        gap: 14px;
+      }
+
+      .faq-item {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        padding: 16px 18px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .faq-item strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .contact {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .contact-box {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line);
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.85);
+      }
+
+      footer {
+        padding: 30px 0 50px;
+        color: var(--muted);
+        font-size: 0.86rem;
+        text-align: center;
+      }
+
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        transition-delay: var(--d, 0s);
+      }
+
+      [data-reveal].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 980px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-copy,
+        .hero-card {
+          grid-column: auto;
+        }
+
+        .metrics,
+        .grid-3,
+        .pricing,
+        .sample-block,
+        .contact {
+          grid-template-columns: 1fr;
+        }
+
+        .nav {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .nav-right {
+          width: 100%;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        }
+
+        .nav-links {
+          flex-wrap: wrap;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        [data-reveal] {
+          transition: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .button {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="orb orb-1" aria-hidden="true"></div>
+      <div class="orb orb-2" aria-hidden="true"></div>
+      <header class="container">
+        <div class="nav">
+          <div class="logo">SIW Intent Brain</div>
+          <div class="nav-right">
+            <nav class="nav-links">
+              <a href="#value" data-i18n="nav.value">Value</a>
+              <a href="#process" data-i18n="nav.process">Process</a>
+              <a href="#sample" data-i18n="nav.sample">Sample</a>
+              <a href="#pricing" data-i18n="nav.pricing">Pricing</a>
+              <a href="#contact" data-i18n="nav.contact">Contact</a>
+            </nav>
+            <div class="lang-switch" role="group" aria-label="Language">
+              <button
+                class="lang-btn is-active"
+                type="button"
+                data-lang="en"
+                aria-pressed="true"
+              >
+                EN
+              </button>
+              <button
+                class="lang-btn"
+                type="button"
+                data-lang="zh"
+                aria-pressed="false"
+              >
+                中文
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="container">
+        <section class="hero" id="top">
+          <div class="hero-copy" data-reveal style="--d: 0.1s">
+            <div class="eyebrow" data-i18n="hero.eyebrow">
+              Reddit Intent Reports
+            </div>
+            <h1 data-i18n="hero.title">
+              Turn real Reddit demand into executable opportunities
+            </h1>
+            <p data-i18n="hero.lead">
+              I deliver custom Reddit research reports for indie makers and lean
+              teams: filter high-intent posts, decode pain points, and translate
+              them into product and go-to-market moves.
+            </p>
+            <div class="cta">
+              <a class="button primary" href="#contact" data-i18n="hero.ctaPrimary"
+                >Book a pilot report</a
+              >
+              <a
+                class="button secondary"
+                href="#sample"
+                data-i18n="hero.ctaSecondary"
+                >View sample report</a
+              >
+            </div>
+            <div class="metrics">
+              <div
+                class="metric"
+                data-i18n="hero.metric1"
+                data-i18n-mode="html"
+              >
+                <span>48h</span>
+                Fast turnaround
+              </div>
+              <div
+                class="metric"
+                data-i18n="hero.metric2"
+                data-i18n-mode="html"
+              >
+                <span>Human</span>
+                Curated review
+              </div>
+              <div
+                class="metric"
+                data-i18n="hero.metric3"
+                data-i18n-mode="html"
+              >
+                <span>Actionable</span>
+                Clear next steps
+              </div>
+            </div>
+          </div>
+          <div class="hero-card" data-reveal style="--d: 0.2s">
+            <div class="card-label" data-i18n="hero.cardLabel">
+              Sample snapshot
+            </div>
+            <div class="report-preview">
+              <div data-i18n="hero.preview1" data-i18n-mode="html">
+                <strong>Core pain:</strong> Users complain current tools are
+                expensive, complex, and lack Chinese support.
+              </div>
+              <div data-i18n="hero.preview2" data-i18n-mode="html">
+                <strong>High-intent leads:</strong> Users explicitly ask for
+                'alternatives' and say they are willing to pay.
+              </div>
+              <div data-i18n="hero.preview3" data-i18n-mode="html">
+                <strong>Suggested direction:</strong> Lightweight alternative +
+                templated delivery + fast onboarding.
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="value">
+          <div data-reveal style="--d: 0.05s">
+            <h2 class="section-title" data-i18n="value.title">
+              You get decisions, not data
+            </h2>
+            <p class="section-lead" data-i18n="value.lead">
+              Every report focuses on insight plus action. You will know what to
+              build and test, without noise.
+            </p>
+          </div>
+          <div class="grid-3">
+            <div class="panel" data-reveal style="--d: 0.1s">
+              <h3 data-i18n="value.panel1.title">
+                High-intent opportunity list
+              </h3>
+              <p data-i18n="value.panel1.body">
+                Posts where users state demand and budget, reducing guesswork.
+              </p>
+            </div>
+            <div class="panel" data-reveal style="--d: 0.15s">
+              <h3 data-i18n="value.panel2.title">Pain points and motivations</h3>
+              <p data-i18n="value.panel2.body">
+                Why they need it now, helping with positioning.
+              </p>
+            </div>
+            <div class="panel" data-reveal style="--d: 0.2s">
+              <h3 data-i18n="value.panel3.title">Actionable next steps</h3>
+              <p data-i18n="value.panel3.body">
+                Product or market entry directions you can ship.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section id="process">
+          <div data-reveal style="--d: 0.05s">
+            <h2 class="section-title" data-i18n="process.title">How it works</h2>
+            <p class="section-lead" data-i18n="process.lead">
+              You give a target. I turn Reddit conversations into a clear report.
+            </p>
+          </div>
+          <div class="steps">
+            <div class="step" data-reveal style="--d: 0.1s">
+              <div class="step-number">01</div>
+              <div>
+                <strong data-i18n="process.step1.title">Define focus</strong>
+                <p data-i18n="process.step1.body">
+                  Confirm industry, keywords, persona, and goal.
+                </p>
+              </div>
+            </div>
+            <div class="step" data-reveal style="--d: 0.15s">
+              <div class="step-number">02</div>
+              <div>
+                <strong data-i18n="process.step2.title">Collect + curate</strong>
+                <p data-i18n="process.step2.body">
+                  Automated collection plus manual filtering for high-intent
+                  content.
+                </p>
+              </div>
+            </div>
+            <div class="step" data-reveal style="--d: 0.2s">
+              <div class="step-number">03</div>
+              <div>
+                <strong data-i18n="process.step3.title">Deliver report</strong>
+                <p data-i18n="process.step3.body">
+                  Insights and recommendations, delivered as PDF or Notion.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="sample">
+          <div class="sample-block">
+            <div data-reveal style="--d: 0.05s">
+              <h2 class="section-title" data-i18n="sample.title">
+                Report sample
+              </h2>
+              <p class="section-lead" data-i18n="sample.lead">
+                The sample shows key pain points, opportunities, and next
+                actions. Tailored to your niche.
+              </p>
+              <a class="button secondary" href="#contact" data-i18n="sample.cta"
+                >Request full sample</a
+              >
+            </div>
+            <div class="sample-card" data-reveal style="--d: 0.15s">
+              <h4 data-i18n="sample.cardTitle">Top Insights / SaaS Pricing</h4>
+              <ul>
+                <li data-i18n="sample.item1" data-i18n-mode="html">
+                  <span>1.</span> Users want pricing that is cheaper and more
+                  transparent.
+                </li>
+                <li data-i18n="sample.item2" data-i18n-mode="html">
+                  <span>2.</span> Onboarding is complex; churn is high.
+                </li>
+                <li data-i18n="sample.item3" data-i18n-mode="html">
+                  <span>3.</span> High-intent users cluster in specific
+                  subreddits.
+                </li>
+                <li data-i18n="sample.item4" data-i18n-mode="html">
+                  <span>4.</span> Direction: lightweight alternative + limited
+                  feature tier.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section id="pricing">
+          <div data-reveal style="--d: 0.05s">
+            <h2 class="section-title" data-i18n="pricing.title">
+              Working together
+            </h2>
+            <p class="section-lead" data-i18n="pricing.lead">
+              Currently in pilot mode for indie makers and small teams.
+            </p>
+          </div>
+          <div class="pricing">
+            <div class="pricing-card" data-reveal style="--d: 0.1s">
+              <span class="tag" data-i18n="pricing.tag1">Pilot</span>
+              <h3 data-i18n="pricing.card1.title">Standard report</h3>
+              <p data-i18n="pricing.card1.body">
+                Best for direction validation. One curated report.
+              </p>
+              <p data-i18n="pricing.card1.price" data-i18n-mode="html">
+                <strong>Custom pricing</strong> / delivered in 48 hours
+              </p>
+            </div>
+            <div class="pricing-card" data-reveal style="--d: 0.15s">
+              <span class="tag" data-i18n="pricing.tag2">Custom</span>
+              <h3 data-i18n="pricing.card2.title">Deep research</h3>
+              <p data-i18n="pricing.card2.body">
+                For positioning or new market entry. Multi-round collaboration.
+              </p>
+              <p data-i18n="pricing.card2.price" data-i18n-mode="html">
+                <strong>Custom pricing</strong> / optional interview plan
+              </p>
+            </div>
+          </div>
+        </section>
+        <section id="faq">
+          <div data-reveal style="--d: 0.05s">
+            <h2 class="section-title" data-i18n="faq.title">FAQ</h2>
+          </div>
+          <div class="faq">
+            <div
+              class="faq-item"
+              data-reveal
+              style="--d: 0.1s"
+              data-i18n="faq.item1"
+              data-i18n-mode="html"
+            >
+              <strong>What's included in the report?</strong> Curated
+              opportunities, user quotes, pain analysis, actionable
+              recommendations.
+            </div>
+            <div
+              class="faq-item"
+              data-reveal
+              style="--d: 0.15s"
+              data-i18n="faq.item2"
+              data-i18n-mode="html"
+            >
+              <strong>Can I specify subreddits or keywords?</strong> Yes.
+              Industry, product type, and keyword combinations are supported.
+            </div>
+            <div
+              class="faq-item"
+              data-reveal
+              style="--d: 0.2s"
+              data-i18n="faq.item3"
+              data-i18n-mode="html"
+            >
+              <strong>Do you offer ongoing updates?</strong> Yes. Monthly
+              refreshes or multiple updates within a project cycle.
+            </div>
+          </div>
+        </section>
+        <section id="contact">
+          <div class="contact">
+            <div data-reveal style="--d: 0.05s">
+              <h2 class="section-title" data-i18n="contact.title">
+                Get your first report
+              </h2>
+              <p class="section-lead" data-i18n="contact.lead">
+                Share your industry, target user, and the direction you want to
+                validate. I'll respond with a clear plan.
+              </p>
+            </div>
+            <div class="contact-box" data-reveal style="--d: 0.15s">
+              <p data-i18n="contact.line1" data-i18n-mode="html">
+                <strong>Email:</strong> hello@yourdomain.com
+              </p>
+              <p data-i18n="contact.line2" data-i18n-mode="html">
+                <strong>WeChat:</strong> your_wechat_id
+              </p>
+              <p data-i18n="contact.line3" data-i18n-mode="html">
+                <strong>Delivery:</strong> PDF / Notion / Google Docs
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer data-i18n="footer.text">
+        © 2025 SIW Intent Brain. All rights reserved.
+      </footer>
+    </div>
+    <script>
+      const translations = {
+        en: {
+          metaTitle: "SIW Intent Brain | Reddit Intent Reports",
+          metaDescription:
+            "Trusted Reddit intent intelligence reports that turn real demand into actionable opportunities.",
+          ogTitle: "SIW Intent Brain | Reddit Intent Reports",
+          ogDescription: "Turn real Reddit demand into actionable opportunities.",
+          "nav.value": "Value",
+          "nav.process": "Process",
+          "nav.sample": "Sample",
+          "nav.pricing": "Pricing",
+          "nav.contact": "Contact",
+          "hero.eyebrow": "Reddit Intent Reports",
+          "hero.title": "Turn real Reddit demand into executable opportunities",
+          "hero.lead":
+            "I deliver custom Reddit research reports for indie makers and lean teams: filter high-intent posts, decode pain points, and translate them into product and go-to-market moves.",
+          "hero.ctaPrimary": "Book a pilot report",
+          "hero.ctaSecondary": "View sample report",
+          "hero.metric1": "<span>48h</span>Fast turnaround",
+          "hero.metric2": "<span>Human</span>Curated review",
+          "hero.metric3": "<span>Actionable</span>Clear next steps",
+          "hero.cardLabel": "Sample snapshot",
+          "hero.preview1":
+            "<strong>Core pain:</strong> Users complain current tools are expensive, complex, and lack Chinese support.",
+          "hero.preview2":
+            "<strong>High-intent leads:</strong> Users explicitly ask for 'alternatives' and say they are willing to pay.",
+          "hero.preview3":
+            "<strong>Suggested direction:</strong> Lightweight alternative + templated delivery + fast onboarding.",
+          "value.title": "You get decisions, not data",
+          "value.lead":
+            "Every report focuses on insight plus action. You will know what to build and test, without noise.",
+          "value.panel1.title": "High-intent opportunity list",
+          "value.panel1.body":
+            "Posts where users state demand and budget, reducing guesswork.",
+          "value.panel2.title": "Pain points and motivations",
+          "value.panel2.body":
+            "Why they need it now, helping with positioning.",
+          "value.panel3.title": "Actionable next steps",
+          "value.panel3.body":
+            "Product or market entry directions you can ship.",
+          "process.title": "How it works",
+          "process.lead":
+            "You give a target. I turn Reddit conversations into a clear report.",
+          "process.step1.title": "Define focus",
+          "process.step1.body":
+            "Confirm industry, keywords, persona, and goal.",
+          "process.step2.title": "Collect + curate",
+          "process.step2.body":
+            "Automated collection plus manual filtering for high-intent content.",
+          "process.step3.title": "Deliver report",
+          "process.step3.body":
+            "Insights and recommendations, delivered as PDF or Notion.",
+          "sample.title": "Report sample",
+          "sample.lead":
+            "The sample shows key pain points, opportunities, and next actions. Tailored to your niche.",
+          "sample.cta": "Request full sample",
+          "sample.cardTitle": "Top Insights / SaaS Pricing",
+          "sample.item1":
+            "<span>1.</span> Users want pricing that is cheaper and more transparent.",
+          "sample.item2": "<span>2.</span> Onboarding is complex; churn is high.",
+          "sample.item3":
+            "<span>3.</span> High-intent users cluster in specific subreddits.",
+          "sample.item4":
+            "<span>4.</span> Direction: lightweight alternative + limited feature tier.",
+          "pricing.title": "Working together",
+          "pricing.lead":
+            "Currently in pilot mode for indie makers and small teams.",
+          "pricing.tag1": "Pilot",
+          "pricing.card1.title": "Standard report",
+          "pricing.card1.body":
+            "Best for direction validation. One curated report.",
+          "pricing.card1.price":
+            "<strong>Custom pricing</strong> / delivered in 48 hours",
+          "pricing.tag2": "Custom",
+          "pricing.card2.title": "Deep research",
+          "pricing.card2.body":
+            "For positioning or new market entry. Multi-round collaboration.",
+          "pricing.card2.price":
+            "<strong>Custom pricing</strong> / optional interview plan",
+          "faq.title": "FAQ",
+          "faq.item1":
+            "<strong>What's included in the report?</strong> Curated opportunities, user quotes, pain analysis, actionable recommendations.",
+          "faq.item2":
+            "<strong>Can I specify subreddits or keywords?</strong> Yes. Industry, product type, and keyword combinations are supported.",
+          "faq.item3":
+            "<strong>Do you offer ongoing updates?</strong> Yes. Monthly refreshes or multiple updates within a project cycle.",
+          "contact.title": "Get your first report",
+          "contact.lead":
+            "Share your industry, target user, and the direction you want to validate. I'll respond with a clear plan.",
+          "contact.line1": "<strong>Email:</strong> hello@yourdomain.com",
+          "contact.line2": "<strong>WeChat:</strong> your_wechat_id",
+          "contact.line3": "<strong>Delivery:</strong> PDF / Notion / Google Docs",
+          "footer.text": "© 2025 SIW Intent Brain. All rights reserved.",
+        },
+        zh: {
+          metaTitle: "SIW Intent Brain | Reddit 意图报告",
+          metaDescription:
+            "专业可信的 Reddit 意图情报报告，把真实需求转成可执行商业线索。",
+          ogTitle: "SIW Intent Brain | Reddit 意图报告",
+          ogDescription: "把 Reddit 的真实需求，变成可执行商业线索。",
+          "nav.value": "价值",
+          "nav.process": "流程",
+          "nav.sample": "样例",
+          "nav.pricing": "合作",
+          "nav.contact": "联系",
+          "hero.eyebrow": "Reddit 意图情报报告",
+          "hero.title": "把 Reddit 的真实需求，变成可执行商业线索",
+          "hero.lead":
+            "我为独立开发者与小团队定制 Reddit 调研报告：筛选高意图帖子，拆解痛点与需求，给出可落地的产品与获客方向。",
+          "hero.ctaPrimary": "预约试运行报告",
+          "hero.ctaSecondary": "查看报告样例",
+          "hero.metric1": "<span>48h</span>快速交付",
+          "hero.metric2": "<span>手工</span>人工精筛",
+          "hero.metric3": "<span>可执行</span>清晰下一步",
+          "hero.cardLabel": "样例摘要",
+          "hero.preview1":
+            "<strong>核心痛点：</strong>用户抱怨现有工具过贵、流程复杂、无中文支持。",
+          "hero.preview2":
+            "<strong>高意图线索：</strong>明确询问'有什么替代品''愿意付费'。",
+          "hero.preview3":
+            "<strong>建议方向：</strong>轻量替代品 + 模板化交付 + 快速上手。",
+          "value.title": "你得到的不只是数据",
+          "value.lead":
+            "每份报告强调洞察 + 可执行。你会知道该做什么，而不是一堆噪音。",
+          "value.panel1.title": "高意图商机清单",
+          "value.panel1.body":
+            "筛选明确表达需求与预算的帖子，减少试错。",
+          "value.panel2.title": "痛点与动机拆解",
+          "value.panel2.body":
+            "归纳用户的'为什么现在需要'，适合产品定位。",
+          "value.panel3.title": "落地建议与下一步",
+          "value.panel3.body": "给出产品/市场切入方向，直接可行动。",
+          "process.title": "工作方式",
+          "process.lead":
+            "你给我一个目标，我负责把 Reddit 里的真实需求变成报告。",
+          "process.step1.title": "确定方向",
+          "process.step1.body": "确认行业、关键词、目标用户画像与目的。",
+          "process.step2.title": "抓取 + 精筛",
+          "process.step2.body": "自动抓取 + 人工筛选，保留高意图内容。",
+          "process.step3.title": "生成报告",
+          "process.step3.body": "总结洞察、给出建议，交付 PDF 或 Notion。",
+          "sample.title": "报告样例",
+          "sample.lead":
+            "样例展示了'关键痛点 + 商机建议 + 下一步行动'。可按行业定制。",
+          "sample.cta": "索取完整样例",
+          "sample.cardTitle": "Top Insights / SaaS Pricing",
+          "sample.item1": "<span>1.</span> 用户希望'更便宜 + 更透明'的方案。",
+          "sample.item2": "<span>2.</span> 现有工具 onboarding 复杂，放弃率高。",
+          "sample.item3": "<span>3.</span> 高意图用户集中在特定子版块。",
+          "sample.item4": "<span>4.</span> 建议：轻量替代 + 限定功能版。",
+          "pricing.title": "合作方式",
+          "pricing.lead": "目前为试运行阶段，优先服务独立开发者与小团队。",
+          "pricing.tag1": "试运行",
+          "pricing.card1.title": "标准报告",
+          "pricing.card1.body": "适合明确方向验证。交付 1 份精筛报告。",
+          "pricing.card1.price": "<strong>按需求报价</strong> / 48 小时内交付",
+          "pricing.tag2": "定制",
+          "pricing.card2.title": "深度调研",
+          "pricing.card2.body": "适合产品定位或新市场进入。多轮迭代沟通。",
+          "pricing.card2.price": "<strong>按需求报价</strong> / 可含访谈方案",
+          "faq.title": "常见问题",
+          "faq.item1":
+            "<strong>报告里会有哪些内容？</strong> 精选商机线索、用户原话、痛点分析、行动建议。",
+          "faq.item2":
+            "<strong>可指定子版块或关键词吗？</strong> 可以，支持指定行业、产品类型与关键词组合。",
+          "faq.item3":
+            "<strong>是否支持持续更新？</strong> 可以，提供按月更新或项目周期内多次更新。",
+          "contact.title": "联系我，获取第一份报告",
+          "contact.lead":
+            "告诉我你的行业、目标用户和想验证的方向，我会给你明确的行动建议。",
+          "contact.line1": "<strong>邮箱：</strong> hello@yourdomain.com",
+          "contact.line2": "<strong>微信：</strong> your_wechat_id",
+          "contact.line3": "<strong>交付：</strong> PDF / Notion / Google Docs",
+          "footer.text": "© 2025 SIW Intent Brain。保留所有权利。",
+        },
+      };
+
+      const langButtons = document.querySelectorAll(".lang-btn");
+      const storedLang = localStorage.getItem("siw-lang");
+      const initialLang = translations[storedLang] ? storedLang : "en";
+
+      const setLanguage = (lang) => {
+        const dict = translations[lang] || translations.en;
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        document.documentElement.dataset.lang = lang;
+
+        document.title = dict.metaTitle;
+        const metaDescription = document.querySelector(
+          'meta[name="description"]'
+        );
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        const ogDescription = document.querySelector(
+          'meta[property="og:description"]'
+        );
+
+        if (metaDescription) {
+          metaDescription.setAttribute("content", dict.metaDescription);
+        }
+        if (ogTitle) {
+          ogTitle.setAttribute("content", dict.ogTitle);
+        }
+        if (ogDescription) {
+          ogDescription.setAttribute("content", dict.ogDescription);
+        }
+
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.dataset.i18n;
+          const value = dict[key];
+          if (!value) {
+            return;
+          }
+          if (el.dataset.i18nMode === "html") {
+            el.innerHTML = value;
+          } else {
+            el.textContent = value;
+          }
+        });
+
+        langButtons.forEach((btn) => {
+          const isActive = btn.dataset.lang === lang;
+          btn.classList.toggle("is-active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
+
+        localStorage.setItem("siw-lang", lang);
+      };
+
+      langButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setLanguage(btn.dataset.lang);
+        });
+      });
+
+      setLanguage(initialLang);
+
+      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const revealEls = document.querySelectorAll("[data-reveal]");
+
+      if (prefersReduced.matches) {
+        revealEls.forEach((el) => el.classList.add("is-visible"));
+      } else {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+
+        revealEls.forEach((el) => observer.observe(el));
+      }
+    </script>
+  </body>
+</html>
