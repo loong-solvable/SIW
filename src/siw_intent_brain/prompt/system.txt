@@ -24,7 +24,6 @@ STRUCTURE RULES:
 2. Do NOT include any keys not present in the schema (no extra fields).
 3. extracted_signals list fields (constraints, budget_hints, tooling_stack, keywords) must be arrays of strings with max 50 items each.
 4. rationale max length: 400 characters. safety_notes max 50 items.
-5. meta must include: model, provider="openrouter", latency_ms, retries, parser_mode, schema_version="lead_card.v1".
+5. meta must include: model, provider="{provider}", latency_ms, retries, parser_mode, schema_version="lead_card.v1".
 
 Your task is to analyze the provided text and context, then return a JSON object matching the exact shape provided in output_template. Replace placeholder values with your analysis.
-

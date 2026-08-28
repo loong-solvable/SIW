@@ -1,5 +1,7 @@
 ﻿# SIW Intent Brain 使用说明
 
+> 配置说明更新：新环境以 `AI_API_KEY / AI_BASE_URL / AI_MODEL` 为准；本文出现的 `OPENROUTER_*` 仅代表兼容旧环境。Web 工作台、任务历史与健康检查请优先参阅根目录 `README.md`。
+
 本文件基于当前代码实现整理，覆盖 CLI 和 Python API 的使用方式。
 
 ## 1. 项目简介

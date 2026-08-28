@@ -36,6 +36,7 @@ class TestBrainConfig:
         assert cfg.response_format_json is True
         assert cfg.http_referer is None
         assert cfg.x_title is None
+        assert cfg.provider == "openai_compatible"
     
     def test_custom_values(self):
         """BrainConfig accepts custom values."""
@@ -132,6 +133,42 @@ class TestLoadConfigEnv:
             assert cfg.max_rationale_chars == 300
             assert cfg.max_list_items == 25
             assert cfg.response_format_json is False
+
+    def test_provider_neutral_ai_env_is_primary(self):
+        """cc-switch-compatible AI_* variables take priority over legacy names."""
+        env = {
+            "AI_API_KEY": "cc-switch-key",
+            "AI_MODEL": "selected-model",
+            "AI_BASE_URL": "https://cc-switch.example",
+            "AI_TIMEOUT_S": "75",
+            "AI_MAX_RETRIES": "6",
+            "AI_BACKOFF_S": "1.8",
+            "OPENROUTER_API_KEY": "legacy-key",
+            "OPENROUTER_MODEL": "legacy-model",
+            "OPENROUTER_BASE_URL": "https://legacy.example/v1",
+        }
+
+        with mock.patch.dict(os.environ, env, clear=True):
+            cfg = load_config(load_dotenv_file=False)
+
+        assert cfg.api_key == "cc-switch-key"
+        assert cfg.model == "selected-model"
+        assert cfg.base_url == "https://cc-switch.example/v1/chat/completions"
+        assert cfg.timeout_s == 75
+        assert cfg.max_retries == 6
+        assert cfg.backoff_s == 1.8
+
+    def test_ai_base_url_keeps_explicit_chat_completions_endpoint(self):
+        """An explicitly configured completion endpoint is not duplicated."""
+        env = {
+            "AI_API_KEY": "cc-switch-key",
+            "AI_BASE_URL": "https://cc-switch.example/v1/chat/completions",
+        }
+
+        with mock.patch.dict(os.environ, env, clear=True):
+            cfg = load_config(load_dotenv_file=False)
+
+        assert cfg.base_url == "https://cc-switch.example/v1/chat/completions"
     
     def test_bool_parsing_variations(self):
         """Boolean parsing handles various string formats."""
@@ -250,6 +287,35 @@ openrouter:
 # =============================================================================
 
 class TestLoadConfigPriority:
+    def test_provider_neutral_yaml_config_is_complete(self):
+        yaml_content = """
+ai:
+  api_key: yaml-ai-key
+  base_url: https://gateway.example/v1
+  model: selected-model
+  provider: cc_switch
+  timeout_s: 47
+  max_retries: 4
+  backoff_s: 2.0
+"""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False, encoding="utf-8") as f:
+            f.write(yaml_content)
+            yaml_path = f.name
+
+        try:
+            with mock.patch.dict(os.environ, {}, clear=True):
+                cfg = load_config(config_path=yaml_path, load_dotenv_file=False)
+
+            assert cfg.api_key == "yaml-ai-key"
+            assert cfg.base_url == "https://gateway.example/v1/chat/completions"
+            assert cfg.model == "selected-model"
+            assert cfg.provider == "cc_switch"
+            assert cfg.timeout_s == 47
+            assert cfg.max_retries == 4
+            assert cfg.backoff_s == 2.0
+        finally:
+            os.unlink(yaml_path)
+
     def test_env_overrides_yaml(self):
         """Environment variables take priority over YAML."""
         yaml_content = """
@@ -377,4 +443,3 @@ class TestErrorInfo:
         err = ErrorInfo(code="E_TEST", detail="Test")
         with pytest.raises(Exception):  # FrozenInstanceError
             err.code = "E_OTHER"  # type: ignore
-

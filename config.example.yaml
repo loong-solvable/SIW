@@ -1,31 +1,20 @@
 # SIW Intent Brain - Configuration Example
 # Copy this file to config.yaml and customize as needed
 
-# Model to use for scoring (via OpenRouter)
-model: anthropic/claude-sonnet-4
+# Do not commit a real key. Environment variables take precedence over this file.
+ai:
+  api_key: replace-at-runtime
+  base_url: https://your-openai-compatible-gateway.example/v1
+  model: your-model-id
+  provider: cc_switch
+  timeout_s: 30
+  max_retries: 3
+  backoff_s: 1.2
+  # http_referer: https://siw.example.com
+  # app_name: SIW Intent Brain
 
-# Request timeout in seconds
-timeout_s: 30
-
-# Maximum retry attempts for failed requests
-max_retries: 3
-
-# Backoff delay between retries (seconds)
-backoff_s: 1.0
-
-# Minimum confidence threshold for soft fail-closed
-# Scores below this will be treated as low-confidence
-min_confidence: 0.35
-
-# Maximum characters for rationale field
-max_rationale_chars: 280
-
-# Maximum items in list fields (constraints, keywords, etc.)
-max_list_items: 10
-
-# Whether to request JSON response format from the model
-response_format_json: true
-
-# Optional: HTTP headers for OpenRouter
-# http_referer: https://your-app.com
-# x_title: Your App Name
+brain:
+  min_confidence: 0.35
+  max_rationale_chars: 280
+  max_list_items: 10
+  response_format_json: true

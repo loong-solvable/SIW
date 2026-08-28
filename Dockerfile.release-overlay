@@ -1,0 +1,8 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ARG RELEASE_ID=development
+LABEL org.opencontainers.image.revision=${RELEASE_ID}
+
+COPY --chown=siw:siw src/siw_intent_brain /usr/local/lib/python3.12/site-packages/siw_intent_brain
+COPY --chown=siw:siw schemas /app/schemas

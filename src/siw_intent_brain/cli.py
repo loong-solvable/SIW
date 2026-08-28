@@ -361,7 +361,10 @@ def _cmd_score(args: argparse.Namespace) -> int:
         # Don't expose API key in error message
         error_msg = str(e)
         if "api_key" in error_msg.lower() or "key" in error_msg.lower():
-            print("ERROR: Configuration error (check OPENROUTER_API_KEY)", file=sys.stderr)
+            print(
+                "ERROR: Configuration error (check AI_API_KEY; OPENROUTER_API_KEY is a compatibility alias)",
+                file=sys.stderr,
+            )
         else:
             print(f"ERROR: {error_msg}", file=sys.stderr)
         return 1
@@ -375,6 +378,7 @@ def _cmd_score(args: argparse.Namespace) -> int:
             api_key=old_cfg.api_key,
             model=old_cfg.model,
             base_url=old_cfg.base_url,
+            provider=old_cfg.provider,
             timeout_s=old_cfg.timeout_s,
             max_retries=old_cfg.max_retries,
             backoff_s=old_cfg.backoff_s,
@@ -443,7 +447,7 @@ def _cmd_doctor() -> int:
       - Package imports work
       - Schema file exists
       - CWD is writable
-      - OPENROUTER_API_KEY is set (shows yes/no, not the value)
+      - AI_API_KEY or its compatibility alias is set (shows yes/no, not the value)
     
     Returns:
       0: All checks pass
@@ -492,11 +496,11 @@ def _cmd_doctor() -> int:
         cwd_msg = f"{cwd} (read-only, non-critical)"
     checks.append(("CWD writable", cwd_ok, cwd_msg))
     
-    # 5. OPENROUTER_API_KEY
-    api_key = os.getenv("OPENROUTER_API_KEY")
+    # 5. Provider-neutral key first, compatibility alias second.
+    api_key = os.getenv("AI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
     key_ok = bool(api_key and api_key.strip())
     key_msg = "Set" if key_ok else "Not set (required for score command)"
-    checks.append(("OPENROUTER_API_KEY", key_ok, key_msg))
+    checks.append(("AI_API_KEY / OPENROUTER_API_KEY", key_ok, key_msg))
     
     # Print results
     all_ok = True
@@ -506,7 +510,7 @@ def _cmd_doctor() -> int:
     for name, ok, msg in checks:
         status = "OK" if ok else "FAIL"
         # API key check is warning, not failure (doctor should still return 0)
-        if name == "OPENROUTER_API_KEY" and not ok:
+        if name == "AI_API_KEY / OPENROUTER_API_KEY" and not ok:
             status = "WARN"
         else:
             if not ok:
@@ -518,7 +522,7 @@ def _cmd_doctor() -> int:
     if all_ok:
         print("All checks passed!")
         if not key_ok:
-            print("\nNote: Set OPENROUTER_API_KEY to use the score command.")
+            print("\nNote: Set AI_API_KEY to use the score command.")
         return 0
     else:
         print("\nSome checks failed. Please fix the issues above.")
@@ -802,7 +806,10 @@ def _cmd_harvest(args: argparse.Namespace) -> int:
     except Exception as e:
         error_msg = str(e)
         if "api_key" in error_msg.lower() or "key" in error_msg.lower():
-            print("ERROR: Configuration error (check OPENROUTER_API_KEY)", file=sys.stderr)
+            print(
+                "ERROR: Configuration error (check AI_API_KEY; OPENROUTER_API_KEY is a compatibility alias)",
+                file=sys.stderr,
+            )
         else:
             print(f"ERROR: {error_msg}", file=sys.stderr)
         return 1

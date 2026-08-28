@@ -115,6 +115,26 @@ class TestSuccessfulRequest:
         assert response.raw["choices"][0]["message"]["content"] == "test content"
 
     @patch("siw_intent_brain.llm.openrouter_client.requests.post")
+    def test_complete_extracts_provider_reported_usage(
+        self, mock_post: MagicMock, client: OpenRouterClient, chat_request: ChatRequest
+    ) -> None:
+        mock_response = make_success_response("test content")
+        mock_response.json.return_value["usage"] = {
+            "prompt_tokens": 120,
+            "completion_tokens": 30,
+            "total_tokens": 150,
+            "cost": 0.00125,
+        }
+        mock_post.return_value = mock_response
+
+        response = client.complete(chat_request)
+
+        assert response.input_tokens == 120
+        assert response.output_tokens == 30
+        assert response.total_tokens == 150
+        assert response.reported_cost_usd_micros == 1250
+
+    @patch("siw_intent_brain.llm.openrouter_client.requests.post")
     def test_complete_sends_correct_headers(
         self, mock_post: MagicMock, config: BrainConfig, chat_request: ChatRequest
     ) -> None:
@@ -476,4 +496,3 @@ class TestLatencyMeasurement:
         
         assert isinstance(response.latency_ms, int)
         assert response.latency_ms >= 0
-

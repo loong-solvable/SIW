@@ -96,6 +96,23 @@ class OpenRouterClient:
                     raise UpstreamError(f"{E_UPSTREAM_EMPTY_CONTENT}: Empty response content")
                 
                 latency_ms = int((time.time() - start_time) * 1000)
+                usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
+
+                def non_negative_int(value: Any) -> int:
+                    return int(value) if isinstance(value, (int, float)) and value >= 0 else 0
+
+                input_tokens = non_negative_int(usage.get("prompt_tokens"))
+                output_tokens = non_negative_int(usage.get("completion_tokens"))
+                total_tokens = non_negative_int(usage.get("total_tokens"))
+                if total_tokens == 0:
+                    total_tokens = input_tokens + output_tokens
+
+                cost = usage.get("cost")
+                reported_cost_usd_micros = (
+                    round(float(cost) * 1_000_000)
+                    if isinstance(cost, (int, float)) and cost >= 0
+                    else None
+                )
                 
                 return ChatResponse(
                     content=content,
@@ -103,6 +120,10 @@ class OpenRouterClient:
                     latency_ms=latency_ms,
                     retries=retries,
                     status_code=response.status_code,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    total_tokens=total_tokens,
+                    reported_cost_usd_micros=reported_cost_usd_micros,
                 )
             
             except requests.Timeout as e:
@@ -222,4 +243,3 @@ class OpenRouterClient:
             return text
         except Exception:
             return "Could not read response body"
-

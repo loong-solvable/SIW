@@ -68,4 +68,7 @@ class ChatResponse:
     latency_ms: int
     retries: int
     status_code: int
-
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+    reported_cost_usd_micros: Optional[int] = None

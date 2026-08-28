@@ -170,11 +170,13 @@ class TestSuccessfulScoring:
         
         meta = card["meta"]
         assert meta["model"] == config.model
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == config.provider
         assert meta["schema_version"] == "lead_card.v1"
         assert isinstance(meta["latency_ms"], int)
         assert meta["latency_ms"] >= 0
         assert isinstance(meta["retries"], int)
+        assert meta["total_tokens"] == 0
+        assert meta["reported_cost_usd_micros"] is None
 
     def test_score_extracted_signals(self, config: BrainConfig) -> None:
         """Extracted signals are included."""
@@ -489,4 +491,3 @@ class TestDTierLowCompositeIgnore:
         
         errors = validate_lead_card(card)
         assert errors == []
-

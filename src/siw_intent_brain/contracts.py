@@ -22,6 +22,7 @@ ParserMode = Literal["strict", "extracted", "fail_closed"]
 LEAD_TIERS = {"S", "A", "B", "C", "D"}
 NEXT_STEPS = {"ignore", "monitor", "draft_reply", "ask_question", "offer_resource"}
 PARSER_MODES = {"strict", "extracted", "fail_closed"}
+SUPPORTED_PROVIDERS = {"openai_compatible", "cc_switch", "openrouter"}
 SCHEMA_VERSION: SchemaVersion = "lead_card.v1"
 
 
@@ -58,6 +59,10 @@ class Meta(TypedDict, total=False):
     error_code: str
     error_detail: str
     validation_error: bool
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    reported_cost_usd_micros: Optional[int]
 
 
 class LeadCard(TypedDict):
@@ -113,14 +118,14 @@ def build_lead_card(
     Construct a LeadCard with required meta defaults.
     
     Ensures:
-      - provider="openrouter"
+      - provider="openai_compatible"
       - schema_version="lead_card.v1"
       - latency_ms, retries, parser_mode have defaults
     """
     meta_out: Meta = dict(meta) if meta else {}  # type: ignore
     
     # Required meta fields with defaults
-    meta_out.setdefault("provider", "openrouter")
+    meta_out.setdefault("provider", "openai_compatible")
     meta_out.setdefault("schema_version", SCHEMA_VERSION)
     meta_out.setdefault("latency_ms", 0)
     meta_out.setdefault("retries", 0)
@@ -155,7 +160,8 @@ _ALLOWED_SCORES_KEYS = {"urgency", "pain_point_intensity", "commercial_relevance
 _ALLOWED_SIGNALS_KEYS = {"problem_summary", "constraints", "budget_hints", "tooling_stack", "keywords"}
 _ALLOWED_META_KEYS = {
     "model", "provider", "latency_ms", "retries", "parser_mode", "schema_version",
-    "error_code", "error_detail", "validation_error"  # Optional fields for ok=false
+    "error_code", "error_detail", "validation_error",
+    "input_tokens", "output_tokens", "total_tokens", "reported_cost_usd_micros",
 }
 
 
@@ -303,9 +309,12 @@ def validate_lead_card(obj: Dict[str, Any]) -> List[str]:
         if "model" in meta and not isinstance(meta["model"], str):
             errors.append("meta.model must be a string")
         
-        # provider: must be "openrouter"
-        if "provider" in meta and meta["provider"] != "openrouter":
-            errors.append(f"meta.provider must be 'openrouter', got '{meta.get('provider')}'")
+        # provider: provider-neutral values plus the legacy compatibility value
+        if "provider" in meta and meta["provider"] not in SUPPORTED_PROVIDERS:
+            errors.append(
+                "meta.provider must be a supported provider "
+                f"{sorted(SUPPORTED_PROVIDERS)}, got '{meta.get('provider')}'"
+            )
         
         # latency_ms: integer >= 0
         if "latency_ms" in meta:
@@ -322,6 +331,23 @@ def validate_lead_card(obj: Dict[str, Any]) -> List[str]:
                 errors.append("meta.retries must be an integer")
             elif ret < 0:
                 errors.append(f"meta.retries must be >= 0, got {ret}")
+
+        for usage_key in ("input_tokens", "output_tokens", "total_tokens"):
+            if usage_key in meta:
+                usage_value = meta[usage_key]
+                if not isinstance(usage_value, int):
+                    errors.append(f"meta.{usage_key} must be an integer")
+                elif usage_value < 0:
+                    errors.append(f"meta.{usage_key} must be >= 0, got {usage_value}")
+
+        if "reported_cost_usd_micros" in meta:
+            cost_value = meta["reported_cost_usd_micros"]
+            if cost_value is not None and not isinstance(cost_value, int):
+                errors.append("meta.reported_cost_usd_micros must be an integer or null")
+            elif isinstance(cost_value, int) and cost_value < 0:
+                errors.append(
+                    "meta.reported_cost_usd_micros must be >= 0 when present"
+                )
         
         # parser_mode: enum (sorted output for stable error messages)
         if "parser_mode" in meta and meta["parser_mode"] not in PARSER_MODES:
@@ -332,4 +358,3 @@ def validate_lead_card(obj: Dict[str, Any]) -> List[str]:
             errors.append(f"meta.schema_version must be 'lead_card.v1', got '{meta.get('schema_version')}'")
     
     return errors
-

@@ -113,9 +113,20 @@ class TestOutputTemplate:
         """Output template includes meta with correct defaults."""
         template = _build_output_template()
         meta = template["meta"]
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         assert meta["schema_version"] == "lead_card.v1"
         assert meta["parser_mode"] == "strict"
+
+    def test_request_uses_configured_provider_in_output_contract(self):
+        """The prompt contract describes the configured compatible provider."""
+        cfg = BrainConfig(api_key="test-key", provider="cc_switch")
+
+        request = build_chat_request(cfg, "Need a reliable automation tool")
+        payload = json.loads(request.messages[1].content)
+
+        assert payload["output_template"]["meta"]["provider"] == "cc_switch"
+        assert payload["field_hints"]["meta.provider"] == "always 'cc_switch'"
+        assert 'provider="cc_switch"' in request.messages[0].content
     
     def test_template_extracted_signals_structure(self):
         """Output template has correct extracted_signals structure."""
@@ -419,4 +430,3 @@ class TestChatRequestToDict:
         d = req.to_dict()
         
         assert "response_format" not in d
-

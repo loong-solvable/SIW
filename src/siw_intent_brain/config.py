@@ -6,7 +6,8 @@ Priority:
   2. YAML config file (optional)
   3. Default values (lowest)
 
-OPENROUTER_API_KEY is required; all other fields have defaults.
+AI_API_KEY is the primary key name. OPENROUTER_API_KEY remains a compatibility
+fallback; all other fields have defaults.
 """
 
 from __future__ import annotations
@@ -38,10 +39,11 @@ class BrainConfig:
     
     All fields except api_key have sensible defaults.
     """
-    # OpenRouter connection
+    # OpenAI-compatible connection
     api_key: str
     model: str = "openai/gpt-4o-mini"
     base_url: str = "https://openrouter.ai/api/v1/chat/completions"
+    provider: str = "openai_compatible"
     timeout_s: int = 30
     max_retries: int = 3
     backoff_s: float = 1.2
@@ -55,6 +57,16 @@ class BrainConfig:
     max_rationale_chars: int = 400
     max_list_items: int = 50
     response_format_json: bool = True  # Allow disabling if model doesn't support
+
+
+def _normalize_ai_base_url(base_url: str) -> str:
+    """Turn an OpenAI-compatible base URL into the chat completions endpoint."""
+    normalized = base_url.strip().rstrip("/")
+    if normalized.endswith("/chat/completions"):
+        return normalized
+    if normalized.endswith("/v1"):
+        return f"{normalized}/chat/completions"
+    return f"{normalized}/v1/chat/completions"
 
 
 # =============================================================================
@@ -148,7 +160,7 @@ def load_config(
         BrainConfig instance.
     
     Raises:
-        ConfigError: If OPENROUTER_API_KEY is missing.
+        ConfigError: If neither AI_API_KEY nor its compatibility fallback exists.
     """
     # Load .env file if exists
     if load_dotenv_file:
@@ -199,21 +211,64 @@ def load_config(
             return yaml_val
         return default
     
-    # --- Required: API Key ---
-    api_key = get_str("OPENROUTER_API_KEY", ("openrouter", "api_key"))
+    # --- Required: API Key (provider-neutral first, legacy fallback second) ---
+    api_key = get_str("AI_API_KEY", ("ai", "api_key")) or get_str(
+        "OPENROUTER_API_KEY", ("openrouter", "api_key")
+    )
     if not api_key:
-        raise ConfigError(f"{E_CONFIG_MISSING_KEY}: OPENROUTER_API_KEY is required")
+        raise ConfigError(
+            f"{E_CONFIG_MISSING_KEY}: AI_API_KEY is required "
+            "(OPENROUTER_API_KEY is accepted for compatibility)"
+        )
     
-    # --- OpenRouter settings ---
-    model = get_str("OPENROUTER_MODEL", ("openrouter", "model"), "openai/gpt-4o-mini") or "openai/gpt-4o-mini"
-    base_url = get_str("OPENROUTER_BASE_URL", ("openrouter", "base_url"), "https://openrouter.ai/api/v1/chat/completions") or "https://openrouter.ai/api/v1/chat/completions"
-    timeout_s = get_int("OPENROUTER_TIMEOUT_S", ("openrouter", "timeout_s"), 30)
-    max_retries = get_int("OPENROUTER_MAX_RETRIES", ("openrouter", "max_retries"), 3)
-    backoff_s = get_float("OPENROUTER_BACKOFF_S", ("openrouter", "backoff_s"), 1.2)
+    # --- OpenAI-compatible provider settings ---
+    model = (
+        get_str("AI_MODEL", ("ai", "model"))
+        or get_str("OPENROUTER_MODEL", ("openrouter", "model"), "openai/gpt-4o-mini")
+        or "openai/gpt-4o-mini"
+    )
+    provider = (
+        get_str("AI_PROVIDER", ("ai", "provider"), "openai_compatible")
+        or "openai_compatible"
+    )
+    ai_base_url = get_str("AI_BASE_URL", ("ai", "base_url"))
+    if ai_base_url:
+        base_url = _normalize_ai_base_url(ai_base_url)
+    else:
+        base_url = (
+            get_str(
+                "OPENROUTER_BASE_URL",
+                ("openrouter", "base_url"),
+                "https://openrouter.ai/api/v1/chat/completions",
+            )
+            or "https://openrouter.ai/api/v1/chat/completions"
+        )
+
+    timeout_s = _parse_int(os.getenv("AI_TIMEOUT_S"))
+    if timeout_s is None:
+        timeout_s = _parse_int(_get_nested(yaml_data, "ai", "timeout_s"))
+    if timeout_s is None:
+        timeout_s = get_int("OPENROUTER_TIMEOUT_S", ("openrouter", "timeout_s"), 30)
+
+    max_retries = _parse_int(os.getenv("AI_MAX_RETRIES"))
+    if max_retries is None:
+        max_retries = _parse_int(_get_nested(yaml_data, "ai", "max_retries"))
+    if max_retries is None:
+        max_retries = get_int("OPENROUTER_MAX_RETRIES", ("openrouter", "max_retries"), 3)
+
+    backoff_s = _parse_float(os.getenv("AI_BACKOFF_S"))
+    if backoff_s is None:
+        backoff_s = _parse_float(_get_nested(yaml_data, "ai", "backoff_s"))
+    if backoff_s is None:
+        backoff_s = get_float("OPENROUTER_BACKOFF_S", ("openrouter", "backoff_s"), 1.2)
     
     # --- Optional headers ---
-    http_referer = get_str("OPENROUTER_HTTP_REFERER", ("openrouter", "http_referer"))
-    x_title = get_str("OPENROUTER_X_TITLE", ("openrouter", "x_title"))
+    http_referer = get_str("AI_HTTP_REFERER", ("ai", "http_referer")) or get_str(
+        "OPENROUTER_HTTP_REFERER", ("openrouter", "http_referer")
+    )
+    x_title = get_str("AI_APP_NAME", ("ai", "app_name")) or get_str(
+        "OPENROUTER_X_TITLE", ("openrouter", "x_title")
+    )
     
     # --- Brain behavior ---
     min_confidence = get_float("BRAIN_MIN_CONFIDENCE", ("brain", "min_confidence"), 0.35)
@@ -225,6 +280,7 @@ def load_config(
         api_key=api_key,
         model=model,
         base_url=base_url,
+        provider=provider,
         timeout_s=timeout_s,
         max_retries=max_retries,
         backoff_s=backoff_s,
@@ -235,4 +291,3 @@ def load_config(
         max_list_items=max_list_items,
         response_format_json=response_format_json,
     )
-

@@ -129,7 +129,7 @@ class TestUpstreamErrors:
         assert "error_code" in meta
         assert meta["error_code"] == E_UPSTREAM_HTTP
         assert meta["schema_version"] == "lead_card.v1"
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         assert meta["model"] == config.model
         assert isinstance(meta["latency_ms"], int)
         assert meta["latency_ms"] >= 0
@@ -198,7 +198,7 @@ class TestUpstreamErrors:
         assert card["recommended_next_step"] == "monitor"
         assert card["meta"]["error_code"] == E_UPSTREAM_TIMEOUT
         assert card["meta"]["schema_version"] == "lead_card.v1"
-        assert card["meta"]["provider"] == "openrouter"
+        assert card["meta"]["provider"] == "openai_compatible"
         
         # Must pass validation
         errors = validate_lead_card(card)
@@ -217,7 +217,7 @@ class TestUpstreamErrors:
         assert card["recommended_next_step"] == "monitor"
         assert card["meta"]["error_code"] == E_UPSTREAM_EMPTY_CONTENT
         assert card["meta"]["schema_version"] == "lead_card.v1"
-        assert card["meta"]["provider"] == "openrouter"
+        assert card["meta"]["provider"] == "openai_compatible"
         
         # Must pass validation
         errors = validate_lead_card(card)
@@ -248,7 +248,7 @@ class TestBadJson:
         assert meta["error_code"] == E_PARSE_JSON
         assert meta["parser_mode"] == "fail_closed"
         assert meta["schema_version"] == "lead_card.v1"
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         
         # Must pass validation
         errors = validate_lead_card(card)
@@ -793,4 +793,3 @@ class TestSafetyNotes:
         card = brain.score("Test text")
         
         assert "fail" in card["rationale"].lower() or "error" in card["rationale"].lower()
-

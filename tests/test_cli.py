@@ -503,7 +503,7 @@ class TestScoreLeadCardContent:
         card = json.loads(captured.out)
         meta = card["meta"]
         assert "model" in meta
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         assert meta["schema_version"] == "lead_card.v1"
 
     def test_score_lead_card_has_scores(self, capsys) -> None:
@@ -614,6 +614,17 @@ class TestDoctor:
         assert "sk-secret-key-12345" not in captured.err
         # But should show "Set" status
         assert "Set" in captured.out
+
+    def test_doctor_accepts_provider_neutral_api_key(self, capsys, monkeypatch) -> None:
+        monkeypatch.setenv("AI_API_KEY", "provider-neutral-secret")
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+        result = main(["doctor"])
+        captured = capsys.readouterr()
+
+        assert result == 0
+        assert "Set" in captured.out
+        assert "provider-neutral-secret" not in captured.out
 
     def test_doctor_without_key_shows_not_set(self, capsys, monkeypatch) -> None:
         """doctor shows 'Not set' when API key is missing."""
@@ -870,4 +881,3 @@ class TestHarvest:
             main(["harvest"])
         # argparse exits with 2 for missing required args
         assert exc_info.value.code == 2
-

@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import os
 import sys
-from rich import print_json
 
 
 def main() -> int:
@@ -52,8 +51,9 @@ def main() -> int:
     # Import after key check to avoid import errors on missing deps
     try:
         from siw_intent_brain import IntentBrain, validate_lead_card
+        from rich import print_json
     except ImportError as e:
-        print(f"ERROR: Failed to import siw_intent_brain: {e}", file=sys.stderr)
+        print(f"ERROR: Failed to import demo dependency: {e}", file=sys.stderr)
         print("Make sure the package is installed: pip install -e .", file=sys.stderr)
         return 1
     
@@ -161,4 +161,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -2,6 +2,9 @@
 Tests for contracts.py - Lead Card contract definitions and validation.
 """
 
+import json
+from pathlib import Path
+
 import pytest
 
 from siw_intent_brain.contracts import (
@@ -91,7 +94,7 @@ class TestBuildLeadCard:
             meta=None,
         )
         meta = card["meta"]
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         assert meta["schema_version"] == "lead_card.v1"
         assert meta["latency_ms"] == 0
         assert meta["retries"] == 0
@@ -115,7 +118,7 @@ class TestBuildLeadCard:
         assert meta["latency_ms"] == 500
         assert meta["retries"] == 2
         # Defaults still applied for missing
-        assert meta["provider"] == "openrouter"
+        assert meta["provider"] == "openai_compatible"
         assert meta["schema_version"] == "lead_card.v1"
 
 
@@ -469,7 +472,37 @@ class TestValidateLeadCardInvalid:
         )
         card["meta"]["provider"] = "other"
         errors = validate_lead_card(card)
-        assert any("meta.provider must be 'openrouter'" in e for e in errors)
+        assert any("meta.provider must be a supported provider" in e for e in errors)
+
+    def test_meta_accepts_provider_neutral_value(self):
+        card = build_lead_card(
+            ok=True,
+            scores=default_scores(),
+            confidence=0.0,
+            lead_tier="D",
+            recommended_next_step="monitor",
+            rationale="Test.",
+            extracted_signals=default_extracted_signals(),
+            safety_notes=[],
+            meta={
+                "model": "m",
+                "provider": "openai_compatible",
+                "parser_mode": "strict",
+            },
+        )
+
+        assert validate_lead_card(card) == []
+
+    def test_json_schema_accepts_current_and_legacy_provider_names(self):
+        schema_path = Path(__file__).parents[1] / "schemas" / "lead_card.v1.json"
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        provider_schema = schema["properties"]["meta"]["properties"]["provider"]
+
+        assert provider_schema["enum"] == [
+            "openai_compatible",
+            "cc_switch",
+            "openrouter",
+        ]
     
     def test_meta_wrong_schema_version(self):
         card = build_lead_card(
@@ -762,4 +795,3 @@ class TestCLIValidate:
             assert result == 1
         finally:
             os.unlink(temp_path)
-

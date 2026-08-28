@@ -49,7 +49,7 @@ def _load_system_prompt() -> str:
     return _SYSTEM_PROMPT_CACHE
 
 
-def _build_output_template() -> Dict[str, Any]:
+def _build_output_template(provider: str = "openai_compatible") -> Dict[str, Any]:
     """
     Build the output template for the LLM.
     
@@ -79,7 +79,7 @@ def _build_output_template() -> Dict[str, Any]:
         "safety_notes": [],
         "meta": {
             "model": "",
-            "provider": "openrouter",
+            "provider": provider,
             "latency_ms": 0,
             "retries": 0,
             "parser_mode": "strict",
@@ -88,7 +88,7 @@ def _build_output_template() -> Dict[str, Any]:
     }
 
 
-def _build_field_hints() -> Dict[str, str]:
+def _build_field_hints(provider: str = "openai_compatible") -> Dict[str, str]:
     """
     Build hints for each field (what values are valid).
     
@@ -111,7 +111,7 @@ def _build_field_hints() -> Dict[str, str]:
         "extracted_signals.keywords": "array of strings, max 50 items",
         "safety_notes": "array of strings, etiquette/spam-risk only, max 50 items",
         "meta.model": "will be filled by system",
-        "meta.provider": "always 'openrouter'",
+        "meta.provider": f"always '{provider}'",
         "meta.latency_ms": "will be filled by system",
         "meta.retries": "will be filled by system",
         "meta.parser_mode": "strict | extracted | fail_closed",
@@ -162,15 +162,15 @@ def build_chat_request(
         - Does NOT include API key in the request payload.
         - Payload structure is stable (fixed field names and order).
     """
-    system_prompt = _load_system_prompt()
+    system_prompt = _load_system_prompt().replace("{provider}", cfg.provider)
     
     # Build user payload with stable field order
     user_payload = {
         "task": "Analyze the following text for commercial intent signals. Return exactly the output_template shape with placeholder values replaced by your analysis.",
         "context": _sanitize_context(context),
         "text": text,
-        "output_template": _build_output_template(),
-        "field_hints": _build_field_hints(),
+        "output_template": _build_output_template(cfg.provider),
+        "field_hints": _build_field_hints(cfg.provider),
     }
     
     # Convert to JSON string for user message
@@ -204,4 +204,3 @@ def get_system_prompt() -> str:
         The system prompt string.
     """
     return _load_system_prompt()
-

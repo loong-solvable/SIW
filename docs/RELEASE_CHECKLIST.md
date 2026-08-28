@@ -1,5 +1,7 @@
 # Release Checklist
 
+> 2026-07-16 更新：发布环境以 `AI_API_KEY / AI_BASE_URL / AI_MODEL` 为主配置，`OPENROUTER_*` 仅用于兼容旧部署；密钥值不得出现在检查记录中。
+
 Pre-release verification steps for SIW Intent Brain.
 
 ---
@@ -9,14 +11,14 @@ Pre-release verification steps for SIW Intent Brain.
 ### 1. Run All Tests
 
 ```bash
-# Activate virtual environment
-.\venv\Scripts\Activate.ps1  # Windows
-source venv/bin/activate      # Linux/macOS
+# Activate the project virtual environment
+.\.venv\Scripts\Activate.ps1  # Windows
+source .venv/bin/activate      # Linux/macOS
 
 # Run full test suite
 pytest -q
 
-# Expected: All tests pass (390+ tests)
+# Expected: All tests pass
 ```
 
 ### 2. Check Environment (Doctor)
@@ -43,9 +45,13 @@ siw-brain demo
 ### 4. Run Online Demo (Real API)
 
 ```bash
-# Set your API key
-$env:OPENROUTER_API_KEY = "sk-or-v1-your-key-here"  # Windows
-export OPENROUTER_API_KEY="sk-or-v1-your-key-here"  # Linux/macOS
+# Inject the selected OpenAI-compatible gateway at runtime
+$env:AI_API_KEY = "runtime-secret"  # Windows
+$env:AI_BASE_URL = "https://compatible-gateway.example/v1"
+$env:AI_MODEL = "selected-model"
+export AI_API_KEY="runtime-secret"  # Linux/macOS
+export AI_BASE_URL="https://compatible-gateway.example/v1"
+export AI_MODEL="selected-model"
 
 # Run online demo
 python scripts/demo_score.py
@@ -110,28 +116,11 @@ siw-brain validate --json-file out.json
 
 ---
 
-## Packaging (Future)
+## Packaging boundary
 
-### PyInstaller (TODO - Not Implemented)
-
-Future plan for standalone executable:
-
-```bash
-# TODO: Create spec file
-# TODO: Build with PyInstaller
-# TODO: Test on clean Windows machine
-```
-
-### PyPI Publishing (TODO - Not Implemented)
-
-Future plan for pip install:
-
-```bash
-# TODO: Setup PyPI account
-# TODO: Configure trusted publishing
-# TODO: Build wheel: python -m build
-# TODO: Upload: twine upload dist/*
-```
+The supported production artifact is `Dockerfile.web`. Standalone Windows and
+public PyPI publishing are not release targets for this product; do not block a
+web release on work that is outside this boundary.
 
 ---
 
@@ -151,7 +140,10 @@ Before tagging a release:
 
 ---
 
-## Release Command
+## Maintainer release command
+
+Only run the commit, tag, and push steps after the repository owner approves the
+release version and target branch.
 
 ```bash
 # Final verification
@@ -165,4 +157,3 @@ git commit -m "Release v0.1.0"
 git tag v0.1.0
 git push origin main --tags
 ```
-

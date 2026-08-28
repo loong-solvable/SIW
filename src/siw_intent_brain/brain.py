@@ -96,7 +96,7 @@ class IntentBrain:
             Configured IntentBrain instance.
         
         Raises:
-            ConfigError: If OPENROUTER_API_KEY is missing.
+            ConfigError: If AI_API_KEY and its compatibility alias are missing.
         """
         cfg = load_config(config_path)
         return cls(cfg)
@@ -267,11 +267,15 @@ class IntentBrain:
                 safety_notes=safety_notes,
                 meta={
                     "model": self.cfg.model,
-                    "provider": "openrouter",
+                    "provider": self.cfg.provider,
                     "latency_ms": latency_ms,
                     "retries": resp.retries,
                     "parser_mode": parser_mode,
                     "schema_version": SCHEMA_VERSION,
+                    "input_tokens": resp.input_tokens,
+                    "output_tokens": resp.output_tokens,
+                    "total_tokens": resp.total_tokens,
+                    "reported_cost_usd_micros": resp.reported_cost_usd_micros,
                 },
             )
             
@@ -342,7 +346,7 @@ class IntentBrain:
             safety_notes=["Low signal input."],
             meta={
                 "model": self.cfg.model,
-                "provider": "openrouter",
+                "provider": self.cfg.provider,
                 "latency_ms": latency_ms,
                 "retries": 0,
                 "parser_mode": parser_mode,
@@ -376,7 +380,7 @@ class IntentBrain:
         meta_fields = error_info.to_meta_fields()
         meta = {
             "model": self.cfg.model,
-            "provider": "openrouter",
+            "provider": self.cfg.provider,
             "latency_ms": latency_ms,
             "retries": retries,
             "parser_mode": parser_mode,
@@ -451,4 +455,3 @@ class IntentBrain:
         except Exception:
             # Never fail on metrics
             pass
-

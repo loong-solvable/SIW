@@ -1,0 +1,27 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SIW_HOST=0.0.0.0 \
+    SIW_PORT=8080 \
+    SIW_DATA_DIR=/data
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY schemas ./schemas
+
+RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple .
+
+RUN useradd --create-home --shell /usr/sbin/nologin siw \
+    && mkdir -p /data/reports \
+    && chown -R siw:siw /data
+
+USER siw
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=3)"
+
+CMD ["python", "-m", "siw_intent_brain.webapp"]
